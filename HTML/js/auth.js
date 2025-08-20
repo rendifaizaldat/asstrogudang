@@ -135,34 +135,23 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     const userRole = (profile.role || "user").toLowerCase();
-    const isMobileDevice = window.innerWidth < 768;
-
-    // <-- PERUBAHAN UTAMA: Logika ini sekarang berlaku untuk SEMUA PENGGUNA -->
     const choiceModal = new bootstrap.Modal(
       document.getElementById("adminChoiceModal")
     );
     const adminPanelBtn = document.getElementById("goToAdminPanelBtn");
     const catalogBtn = document.getElementById("goToCatalogBtn");
 
-    // Ganti teks tombol berdasarkan role pengguna
     if (userRole === "admin") {
       adminPanelBtn.innerHTML =
         '<i class="bi bi-shield-lock me-2"></i>Masuk ke Admin Panel';
     } else {
+      // Untuk pengguna biasa, tombol ini hanya untuk melihat laporan.
       adminPanelBtn.innerHTML =
         '<i class="bi bi-layout-text-sidebar-reverse me-2"></i>Lihat Panel Laporan';
     }
-
-    // Atur tujuan klik tombol "Panel"
     adminPanelBtn.onclick = () => {
-      if (userRole === "admin") {
-          : AppConfig.ROUTES.ADMIN;
-      } else {
-        window.location.href = AppConfig.ROUTES.CATALOG;
-      }
+      window.location.href = AppConfig.ROUTES.ADMIN;
     };
-
-    // Atur tujuan klik tombol "Katalog" (ini sama untuk semua)
     catalogBtn.onclick = () => {
       window.location.href = AppConfig.ROUTES.CATALOG;
     };
@@ -170,4 +159,5 @@ document.addEventListener("DOMContentLoaded", () => {
     choiceModal.show();
   }
 });
+
 
