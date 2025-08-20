@@ -156,13 +156,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Atur tujuan klik tombol "Panel"
     adminPanelBtn.onclick = () => {
       if (userRole === "admin") {
-        // Admin: di desktop ke panel desktop, di mobile ke panel mobile
-        window.location.href = isMobileDevice
-          ? AppConfig.ROUTES.ADMIN_MOBILE
           : AppConfig.ROUTES.ADMIN;
       } else {
-        // User: selalu diarahkan ke panel mobile (view-only), dari perangkat manapun
-        window.location.href = AppConfig.ROUTES.ADMIN_MOBILE;
+        window.location.href = AppConfig.ROUTES.CATALOG;
       }
     };
 
@@ -174,3 +170,4 @@ document.addEventListener("DOMContentLoaded", () => {
     choiceModal.show();
   }
 });
+
