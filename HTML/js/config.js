@@ -28,7 +28,6 @@ export class AppConfig {
     CART: "keranjang.html",
     INVOICE: "invoice.html",
     ADMIN: "js/admin/admin.html",
-    ADMIN_MOBILE: "js/admin/mobile.html",
   };
 
   // Properti `device` juga statis
@@ -81,3 +80,4 @@ export class AppConfig {
 
 // Panggil metode init statis secara langsung
 AppConfig.init();
+
