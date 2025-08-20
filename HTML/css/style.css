@@ -1,0 +1,1569 @@
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: #818cf8;
+  --secondary: #64748b;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --light: #f8fafc;
+  --dark: #1e293b;
+  --white: #ffffff;
+  --surface: #ffffff;
+  --surface-variant: #f1f5f9;
+  --on-surface: #0f172a;
+  --outline: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: var(--on-surface);
+  line-height: 1.6;
+}
+
+/* Glass morphism effects */
+.glass-card,
+.card {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-base);
+  overflow: hidden;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-width: 2px;
+  border-style: solid;
+  border-image-source: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.1)
+  );
+  border-image-slice: 1;
+  box-shadow: var(--shadow);
+}
+
+/* Modern buttons */
+.btn {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  transition: left var(--transition-base);
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn-primary {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: var(--white);
+}
+
+.btn-success {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: var(--white);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-primary:hover {
+  background: rgba(99, 102, 241, 0.5);
+  border-color: rgba(99, 102, 241, 0.7);
+}
+
+.btn-success:hover {
+  background: rgba(16, 185, 129, 0.5);
+  border-color: rgba(16, 185, 129, 0.7);
+}
+
+.btn.loading {
+  pointer-events: none;
+  position: relative;
+}
+
+.btn.loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Login container styles */
+.login-container {
+  max-width: 420px;
+  width: 100%;
+  margin: auto;
+  animation: slideInUp 0.6s var(--bounce);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.login-container .glass-card {
+  padding: 2.5rem;
+  border-radius: 24px;
+}
+
+/* Form styles */
+.form-control {
+  border: 2px solid var(--outline);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  transition: all var(--transition-base);
+  background: var(--surface);
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-control.is-valid {
+  border-color: var(--success);
+}
+
+.form-control.is-invalid {
+  border-color: var(--danger);
+}
+
+/* Product cards */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: all var(--transition-base);
+}
+
+.product-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-xl);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.product-card .card-image-container {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 12px 12px 0 0;
+}
+
+.product-card .product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.1);
+}
+
+/* Sold out overlay */
+.sold-out-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(162, 174, 194, 0.7);
+  color: var(--white);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  backdrop-filter: grayscale(80%);
+  -webkit-backdrop-filter: grayscale(80%);
+  border-radius: 12px 12px 0 0;
+  z-index: 5;
+}
+
+.sold-out-overlay span {
+  background-color: rgba(255, 0, 0, 0.4);
+  color: azure;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.disabled-card {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.disabled-card .sold-out-overlay {
+  opacity: 1;
+}
+
+.invoice-header-title h5 {
+  line-height: 1.2;
+}
+
+#invoiceTimestamp {
+  font-size: 0.6rem;
+}
+
+#invoiceBody td {
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+#invoiceBody td small.text-muted {
+  font-size: 0.6rem;
+}
+
+#invoice-container {
+  max-width: 400px !important;
+  margin: auto;
+}
+
+/* Enhanced overlay */
+.desktop-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    transparent 100%
+  );
+  color: white;
+  transform: translateY(100%);
+  transition: transform var(--transition-base);
+}
+
+.product-card:hover .desktop-overlay {
+  transform: translateY(0);
+}
+
+/* Quantity controls */
+.quantity-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-variant);
+  border-radius: 20px;
+  padding: 8px;
+  margin-top: auto;
+  transition: all var(--transition-base);
+}
+
+.quantity-control:hover {
+  background: var(--outline);
+  transform: scale(1.02);
+}
+
+.btn-qty {
+  width: 36px;
+  height: 36px;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 2px solid var(--outline);
+  color: var(--on-surface);
+  font-size: 1.2rem;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-qty:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: scale(1.1);
+}
+
+.btn-qty:active {
+  transform: scale(0.95);
+}
+
+.btn-qty:disabled {
+  background: var(--surface-variant);
+  color: var(--secondary);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.qty-display {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--on-surface);
+  min-width: 2rem;
+  text-align: center;
+}
+
+.quantity-control button[class*="btn-qty-"] {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.quantity-control button[class*="btn-qty-"] i {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* ADMIN PANEL STYLES */
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.admin-container {
+  display: flex;
+  flex-grow: 1;
+}
+
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 1rem;
+  width: 280px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.admin-header {
+  margin-bottom: 1rem;
+}
+
+.admin-logo-container {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.admin-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--bs-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+.admin-title {
+  flex: 1;
+}
+
+.admin-nav .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 0.5rem;
+  margin-bottom: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.admin-nav .nav-link:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+.admin-nav .nav-link.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-user-button {
+  display: flex;
+  align-items: center;
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease;
+}
+
+.admin-user-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.admin-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--bs-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+.admin-main-content {
+  flex-grow: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+}
+
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.admin-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background-color: rgba(var(--bs-light-rgb), 0.5);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+.admin-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+
+.admin-spinner {
+  width: 3rem;
+  height: 3rem;
+}
+
+.admin-footer {
+  text-align: center;
+  padding: 1rem;
+  border-top: 1px solid var(--bs-border-color);
+  background-color: white;
+  margin-top: auto;
+}
+
+/* Enhanced accessibility styles */
+.visually-hidden-focusable:not(:focus):not(:focus-within) {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.nav-link:focus,
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* WhatsApp Button Styling */
+.whatsapp-chat-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background-color: #25d366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.whatsapp-chat-button:hover {
+  background-color: #20ba5a;
+  transform: scale(1.1);
+  color: white;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+}
+
+.whatsapp-chat-button i {
+  font-size: 1.5rem;
+}
+
+/* Nav Pills */
+.nav-pills .nav-link {
+  border-radius: 12px;
+  transition: all var(--transition-base);
+  margin-bottom: 0.25rem;
+}
+
+.nav-pills .nav-link:hover {
+  background: var(--surface-variant);
+  transform: translateX(4px);
+}
+
+.nav-pills .nav-link.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* Table styles */
+.table {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.table thead th {
+  background: var(--surface-variant);
+  border: none;
+  font-weight: 600;
+  color: var(--on-surface);
+  padding: 1rem;
+}
+
+.table tbody tr {
+  transition: all var(--transition-fast);
+}
+
+.table tbody tr:hover {
+  background: var(--surface-variant);
+  transform: scale(1.01);
+}
+
+/* WhatsApp floating button */
+.whatsapp-chat-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-base);
+  z-index: 1000;
+  animation: pulse 2s infinite;
+}
+
+.whatsapp-chat-button:hover {
+  transform: scale(1.1);
+  color: white;
+  box-shadow: var(--shadow-xl);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+/* Toast enhancements */
+.toast {
+  border-radius: 12px;
+  border: none;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  animation: slideInRight 0.3s var(--bounce);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loader animations */
+.spinner-border {
+  animation: spin 1s linear infinite;
+}
+
+.loading-dots::after {
+  content: "";
+  animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+  0%,
+  20% {
+    color: rgba(0, 0, 0, 0);
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  40% {
+    color: var(--primary);
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  60% {
+    text-shadow: 0.25em 0 0 var(--primary), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  80%,
+  100% {
+    text-shadow: 0.25em 0 0 var(--primary), 0.5em 0 0 var(--primary);
+  }
+}
+
+/* Utility classes */
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.6s var(--bounce);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.3s var(--bounce);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Modern scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-variant);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* === MOBILE RESPONSIVE STYLES === */
+@media (max-width: 991.98px) {
+  /* Target tablet dan di bawahnya */
+  .admin-sidebar {
+    display: none !important; /* Sembunyikan sidebar desktop */
+  }
+
+  .admin-container {
+    flex-direction: column;
+  }
+
+  .admin-mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--outline);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+  }
+
+  .admin-main-content {
+    padding: 1rem;
+  }
+
+  .admin-page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  #summary-cards .col-lg-2 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  #summary-cards .card-title {
+    font-size: 1.2rem;
+  }
+
+  .dashboard-details .col-lg-4,
+  .dashboard-details .col-lg-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .table {
+    font-size: 0.85rem;
+  }
+  .table th,
+  .table td {
+    padding: 0.5rem;
+  }
+
+  #barang-masuk .row .col-lg-5,
+  #barang-masuk .row .col-lg-7 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .navbar.sticky-top {
+    z-index: 1030;
+  }
+
+  #filter-section {
+    position: sticky;
+    top: 65px;
+    z-index: 1020;
+    transition: top 0.3s ease-in-out;
+  }
+
+  #filter-section .fw-bold {
+    font-size: 0.8rem;
+  }
+
+  #filter-section .btn-sm {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  #filter-section .form-select-sm {
+    font-size: 0.8rem;
+  }
+
+  #filter-section #priceRange {
+    max-width: 100px;
+  }
+
+  #filter-section #priceValue {
+    font-size: 0.7rem;
+  }
+
+  #product-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+  }
+
+  .product-card .product-image {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+  }
+
+  .product-card .card-image-container {
+    width: 100%;
+    height: 70px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .product-card .card-footer {
+    padding: 1px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 1;
+  }
+
+  .product-card {
+    width: 110px;
+    height: 170px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .floating-actions a[href="keranjang.html"] {
+    display: none;
+  }
+
+  .whatsapp-chat-button {
+    width: 38px;
+    height: 38px;
+    font-size: 1.2rem;
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .product-card .product-name-mobile {
+    font-size: 0.6rem;
+    margin-bottom: 1px;
+    padding: 0 1px;
+    text-align: center;
+  }
+
+  .product-card .product-price-mobile {
+    padding: 0 1px;
+    text-align: center;
+  }
+
+  .product-card .product-price-mobile span {
+    font-size: 0.6rem;
+  }
+
+  .product-card .btn-qty {
+    width: 15px;
+    height: 15px;
+    font-size: 0.5rem;
+  }
+
+  .product-card .qty-display {
+    font-size: 0.7rem;
+    margin: 0 3px;
+  }
+
+  .mobile-cart-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 4px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .mobile-cart-item:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-cart-item .cart-item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .mobile-cart-item .cart-item-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-cart-item .cart-item-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-cart-item .cart-item-price-per-piece {
+    font-size: 0.6rem;
+  }
+
+  .mobile-cart-item .quantity-control {
+    padding: 2px;
+    width: 100px;
+  }
+
+  .mobile-cart-item .quantity-control .btn-qty {
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+  }
+
+  .mobile-cart-item .quantity-control .qty-input {
+    font-size: 0.9rem;
+    height: auto;
+    padding: 0;
+    margin: 0 4px;
+    flex-shrink: 1;
+    min-width: 20px;
+  }
+
+  .mobile-cart-item .cart-item-subtotal {
+    display: none;
+  }
+
+  .product-header-desktop {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .product-info-mobile {
+    display: none;
+  }
+}
+
+@keyframes fadeInBounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-20px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .glass-card {
+    background: #ffffff;
+    border: 2px solid #000000;
+  }
+
+  .text-muted {
+    color: #000000 !important;
+  }
+
+  .admin-sidebar {
+    background: #000000;
+    color: #ffffff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Enhanced form validation styles */
+.form-control:invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control:valid {
+  border-color: #198754;
+}
+
+/* Loading states */
+.loading {
+  pointer-events: none;
+  opacity: 0.6;
+  position: relative;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animation Enhancements */
+.summary-card {
+  transform: translateY(20px);
+  opacity: 0;
+  animation: cardEnter 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes cardEnter {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.table-row-enter {
+  animation: rowSlideIn 0.4s ease-out forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+@keyframes rowSlideIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.table-row:hover {
+  background-color: rgba(99, 102, 241, 0.05);
+  transform: scale(1.01);
+  transition: all 0.2s ease;
+}
+
+.pulse-animation {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.trend-indicator {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.trend-indicator.positive {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.trend-indicator.negative {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glass-card {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.status-toggle:checked {
+  background-color: var(--bs-success);
+  border-color: var(--bs-success);
+}
+
+.btn-group-sm .btn {
+  transition: all 0.2s ease;
+}
+
+.btn-group-sm .btn:hover {
+  transform: scale(1.1);
+}
+
+.stok-input.changed {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+  transition: all 0.3s ease;
+}
+
+.save-stok-btn:disabled {
+  opacity: 0.5;
+}
+
+.upload-bukti-btn:hover {
+  transform: translateY(-1px);
+}
+
+.alert {
+  animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-control:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5856eb 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+/* Print Styles */
+@media print {
+  .admin-sidebar,
+  .whatsapp-chat-button,
+  .btn,
+  .toast-container {
+    display: none !important;
+  }
+
+  .admin-main-content {
+    padding: 0;
+    background: white;
+  }
+
+  .glass-card {
+    border: 1px solid #dee2e6;
+    background: white;
+  }
+  body * {
+    visibility: hidden;
+  }
+
+  #print-area,
+  #print-area * {
+    visibility: visible;
+  }
+
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .admin-main-content {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: #f7fafc;
+  }
+
+  .glass-card {
+    background: rgba(45, 55, 72, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f7fafc;
+  }
+
+  .table {
+    color: #f7fafc;
+  }
+
+  .table-light th {
+    background-color: rgba(45, 55, 72, 0.5);
+    color: #f7fafc;
+  }
+}
+
+@media (min-width: 800px) {
+  #filter-section {
+    position: sticky;
+    top: 72px;
+    z-index: 1020;
+    transition: top 0.3s ease-in-out;
+  }
+}
+
+.summary-card .card-title.text-warning,
+.summary-card .card-title.text-info {
+  font-size: 1rem;
+}
+/* =================================================================
+   FIX: Background Hamburger Menu Mobile
+   ================================================================= */
+
+#mobileSidebar {
+  /* 1. Samakan background dengan sidebar desktop */
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+#mobileSidebar .offcanvas-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#mobileSidebar .offcanvas-title {
+  /* 2. Ubah warna judul menjadi putih */
+  color: white;
+}
+
+#mobileSidebar .btn-close {
+  /* 3. Ubah warna tombol close menjadi putih */
+  filter: invert(1) grayscale(100) brightness(200%);
+}
+
+/* 4. Samakan warna link menu dengan sidebar desktop */
+#mobileSidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+#mobileSidebar .nav-link:hover,
+#mobileSidebar .nav-link.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ==================== KATALOG MOBILE ==================== */
+@media (max-width: 767.98px) {
+  /* 1. Ellipsis untuk nama produk */
+  .product-name-mobile {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.75rem !important;
+    margin-bottom: 0.25rem !important;
+    padding: 0 4px;
+  }
+
+  /* 2. Overlay stok di atas gambar */
+  .product-card .card-image-container {
+    position: relative;
+  }
+  .mobile-badges span {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background: rgba(255, 255, 255, 0.85) !important;
+    color: #1e293b !important;
+    font-size: 0.65rem !important;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    z-index: 2;
+  }
+
+  /* 3. Perkecil tombol kuantitas */
+  .btn-qty {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.8rem !important;
+    line-height: 1 !important;
+  }
+  .qty-display {
+    font-size: 0.9rem !important;
+    font-weight: bold !important;
+  }
+
+  /* 4. Sembunyikan floating action keranjang di mobile */
+  .floating-actions {
+    display: none !important;
+  }
+}
+
+/* ==================== KERANJANG MOBILE ==================== */
+@media (max-width: 767.98px) {
+  /* 1. Perkecil header */
+  h1.fw-bold {
+    font-size: 1rem !important;
+  }
+  .text-muted.mb-0 {
+    font-size: 0.7rem !important;
+  }
+
+  /* 2. Rapatkan baris produk */
+  .mobile-cart-item {
+    padding: 8px 0 !important;
+  }
+  .mobile-cart-item .cart-item-details {
+    padding: 0 8px;
+  }
+  .mobile-cart-item .cart-item-name {
+    font-size: 0.8rem !important;
+    margin-bottom: 2px;
+  }
+  .mobile-cart-item .cart-item-price-per-piece {
+    font-size: 0.6rem !important;
+  }
+  .mobile-cart-item .quantity-control {
+    padding: 4px !important;
+    width: 110px !important;
+  }
+  .mobile-cart-item .btn-qty {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 0.5rem !important;
+  }
+  .mobile-cart-item .qty-input {
+    font-size: 0.8rem !important;
+    height: 20px !important;
+  }
+
+  /* 3. Perkecil teks total belanja */
+  .fs-5.me-3,
+  .fs-4.fw-bold.text-primary {
+    font-size: 1rem !important;
+  }
+}
+
+/* Autocomplete Styles */
+.autocomplete-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  border-radius: 0 0 0.375rem 0.375rem;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1050; /* Pastikan muncul di atas elemen lain */
+}
+
+.autocomplete-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.autocomplete-item:hover {
+  background-color: #f8f9fa;
+}
+
+.autocomplete-item strong {
+  color: var(--bs-primary);
+}
+
+/* =============================================== */
+/* STYLE UNTUK MODAL PASSWORD SUPER ADMIN          */
+/* =============================================== */
+
+/* Memberi padding lebih agar tidak terlalu mepet */
+#passwordModal .modal-body {
+  padding: 1.5rem;
+}
+
+/* Mengatur form agar elemen di dalamnya bisa dipusatkan */
+#passwordForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Memastikan label berada di tengah dan memiliki sedikit jarak */
+#passwordForm .form-label {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+/* Mengatur lebar maksimal untuk input dan tombol agar tidak terlalu lebar */
+#passwordForm .form-control,
+#passwordForm .btn {
+  max-width: 240px; /* Anda bisa sesuaikan ukuran ini */
+  width: 100%;
+}
+
+/* -- Perbaikan Font di Card Dashboard -- */
+/* Menargetkan semua tabel kecil di dalam card konten utama admin */
+.admin-main-content .card .table-responsive .table {
+  font-size: 0.8rem; /* Mengurangi ukuran font dasar tabel menjadi lebih kecil */
+}
+
+/* Mengatur ulang padding agar tidak terlalu renggang */
+.admin-main-content .card .table-responsive .table th,
+.admin-main-content .card .table-responsive .table td {
+  padding: 0.4rem 0.5rem; /* Atas/Bawah: 0.4rem, Kiri/Kanan: 0.5rem */
+  vertical-align: middle; /* Memastikan teks berada di tengah secara vertikal */
+}
+
+/* Khusus untuk badge di dalam tabel kecil agar ukurannya pas */
+.admin-main-content .card .table-responsive .table .badge {
+  font-size: 0.7rem;
+  padding: 0.25em 0.5em;
+}
+
+/* Menambahkan di akhir file style.css */
+
+.scrollable-table-container {
+  max-height: 65vh; /* Anda bisa menyesuaikan tinggi ini, misal: 500px */
+  overflow-y: auto;
+  position: relative; /* Diperlukan agar header tabel 'lengket' */
+}
+
+.scrollable-table-container thead th {
+  position: sticky; /* Membuat header tabel tetap di atas saat scroll */
+  top: 0;
+  z-index: 10; /* Memastikan header di atas konten tabel */
+  /* Warna background diambil dari style .table thead th yang sudah ada */
+  background: var(--surface-variant);
+}
