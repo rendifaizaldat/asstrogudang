@@ -1,3 +1,5 @@
+// HTML/js/admin/renderer.js
+
 import { AdminAnimationController } from "./animations.js";
 import { CurrencyFormatter } from "../utils.js";
 
@@ -102,62 +104,188 @@ class AdminRenderer {
   }
 
   renderPiutangTable(searchTerm = "", statusFilter = "all") {
-    const allPiutang = this.state.getData("piutang");
-    const piutangSummary = this.state.getFinancialSummary(allPiutang);
-    this.renderFinancialSummaryCards(
-      "piutang-summary-cards",
-      piutangSummary,
-      "Piutang"
+    const piutangContainer = document.getElementById(
+      "piutang-outlet-container"
     );
-    this.renderGenericTable({
-      dataType: "piutang",
-      searchTerm,
-      statusFilter,
-      tbodyId: "piutang-table-body",
-      columns: 8,
-      emptyMessage: "Tidak ada data piutang",
-      rowGenerator: (p) => {
-        const isOverdue = this.isOverdue(p.created_at);
-        const statusClass = this.getStatusBadgeClass(p.status);
+    if (!piutangContainer) {
+      console.error(
+        "[DEBUG-RENDERER] FATAL: Container #piutang-outlet-container tidak ditemukan!"
+      );
+      return;
+    }
 
-        return `
-          <tr class="table-row ${isOverdue ? "table-warning" : ""}">
-            <td><span class="fw-semibold">${p.invoice_id}</span></td>
-            <td>${this.formatDate(p.tanggal_pengiriman)}</td>
-            <td>${p.outlet_name}</td>
-            <td class="text-end fw-bold">${CurrencyFormatter.format(
-              p.total_tagihan
-            )}</td>
-            <td><span class="badge ${statusClass} rounded-pill">${
-          p.status || "Belum Lunas"
-        }</span></td>
-            <td>${this.renderBuktiTransfer(
-              p.bukti_transfer,
-              p.id,
-              "piutang"
-            )}</td>
-            <td>
-              <div class="form-check form-switch"><input class="form-check-input status-toggle" type="checkbox" ${
-                this.isLunas(p.status) ? "checked" : ""
-              } data-type="piutang" data-id="${p.id}"></div>
-            </td>
-            <td>
-              <div class="btn-group btn-group-sm">
-                <button class="btn btn-outline-primary btn-edit-transaction" data-id="${
-                  p.id
-                }" data-type="piutang"><i class="bi bi-pencil-square"></i></button>
-                <button class="btn btn-outline-danger btn-delete-transaction" data-id="${
-                  p.id
-                }" data-type="piutang"><i class="bi bi-trash"></i></button>
-                <button class="btn btn-outline-secondary btn-print-invoice" data-id="${
-                  p.id
-                }" title="Cetak Ulang Nota"><i class="bi bi-printer"></i></button>
-              </div>
-            </td>
-          </tr>
+    // Ambil data SETELAH memastikan container ada
+    const allPiutang = this.state.searchData(searchTerm, "piutang");
+    // 1. Group by outlet name
+    const groupedByOutlet = allPiutang.reduce((acc, p) => {
+      const key = p.outlet_name || "Tanpa Nama Outlet";
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(p);
+      return acc;
+    }, {});
+
+    if (Object.keys(groupedByOutlet).length === 0) {
+      piutangContainer.innerHTML = `
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-search fs-2 mb-2"></i>
+                <p>Tidak ada data piutang ditemukan untuk pencarian ini.</p>
+            </div>`;
+      return;
+    }
+
+    let html = "";
+    for (const outletName in groupedByOutlet) {
+      const items = groupedByOutlet[outletName];
+
+      const totalLunas = items
+        .filter((i) => i.status === "Lunas")
+        .reduce((sum, i) => sum + i.total_tagihan, 0);
+      const totalBelumLunas = items
+        .filter((i) => i.status !== "Lunas")
+        .reduce((sum, i) => sum + i.total_tagihan, 0);
+      const totalKeseluruhan = totalLunas + totalBelumLunas;
+
+      // Terapkan filter status di sini
+      const filteredItems =
+        statusFilter === "all"
+          ? items
+          : items.filter(
+              (item) => (item.status || "Belum Lunas") === statusFilter
+            );
+
+      html += `
+            <div class="card glass-card mb-4 outlet-group" data-outlet-name="${outletName}">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap p-2">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-shop me-2"></i>${outletName}</h6>
+                    <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+                        <div class="outlet-totals small me-2">
+                            <span class="badge bg-success">Lunas: ${CurrencyFormatter.format(
+                              totalLunas
+                            )}</span>
+                            <span class="badge bg-warning text-dark">Belum: ${CurrencyFormatter.format(
+                              totalBelumLunas
+                            )}</span>
+                            <span class="badge bg-primary">Total: ${CurrencyFormatter.format(
+                              totalKeseluruhan
+                            )}</span>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary piutang-filter-btn ${
+                              statusFilter === "all" ? "active" : ""
+                            }" data-status="all">Semua</button>
+                            <button class="btn btn-outline-secondary piutang-filter-btn ${
+                              statusFilter === "Lunas" ? "active" : ""
+                            }" data-status="Lunas">Lunas</button>
+                            <button class="btn btn-outline-secondary piutang-filter-btn ${
+                              statusFilter === "Belum Lunas" ? "active" : ""
+                            }" data-status="Belum Lunas">Belum</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>ID Invoice</th>
+                                <th>Tanggal</th>
+                                <th class="text-end">Total</th>
+                                <th>Status</th>
+                                <th>Bukti</th>
+                                <th style="width: 150px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${
+                              filteredItems.length > 0
+                                ? filteredItems
+                                    .map((p) => {
+                                      const isOverdue = this.isOverdue(
+                                        p.created_at
+                                      );
+                                      const statusClass =
+                                        this.getStatusBadgeClass(p.status);
+                                      return `
+                                    <tr class="table-row ${
+                                      isOverdue ? "table-warning" : ""
+                                    }" data-status="${
+                                        p.status || "Belum Lunas"
+                                      }">
+                                        <td><span class="fw-semibold">${
+                                          p.invoice_id
+                                        }</span></td>
+                                        <td>${this.formatDate(
+                                          p.tanggal_pengiriman
+                                        )}</td>
+                                        <td class="text-end fw-bold">${CurrencyFormatter.format(
+                                          p.total_tagihan
+                                        )}</td>
+                                        <td><span class="badge ${statusClass} rounded-pill">${
+                                        p.status || "Belum Lunas"
+                                      }</span></td>
+                                        <td>${this.renderBuktiTransfer(
+                                          p.bukti_transfer,
+                                          p.id,
+                                          "piutang"
+                                        )}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="form-check form-switch me-2" title="Ubah Status Lunas">
+                                                    <input class="form-check-input status-toggle" type="checkbox" ${
+                                                      this.isLunas(p.status)
+                                                        ? "checked"
+                                                        : ""
+                                                    } data-type="piutang" data-id="${
+                                        p.id
+                                      }">
+                                                </div>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-secondary btn-print-invoice" data-id="${
+                                                      p.id
+                                                    }" title="Cetak Ulang Nota"><i class="bi bi-printer"></i></button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                                    })
+                                    .join("")
+                                : `<tr><td colspan="6" class="text-center text-muted py-3">Tidak ada data untuk filter ini.</td></tr>`
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         `;
-      },
+    }
+
+    piutangContainer.innerHTML = html;
+
+    piutangContainer.querySelectorAll(".piutang-filter-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const currentSearch = document.getElementById("piutang-search").value;
+        this.renderPiutangTable(currentSearch, btn.dataset.status);
+      });
     });
+  }
+
+  filterPiutangTable(outletGroup, status) {
+    const rows = outletGroup.querySelectorAll("tbody tr");
+    rows.forEach((row) => {
+      if (status === "all" || row.dataset.status === status) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
+    // Update active button style
+    outletGroup.querySelectorAll(".piutang-filter-btn").forEach((b) => {
+      b.classList.remove("active");
+    });
+    outletGroup
+      .querySelector(`.piutang-filter-btn[data-status="${status}"]`)
+      .classList.add("active");
   }
 
   renderHutangTable(searchTerm = "", statusFilter = "all") {
