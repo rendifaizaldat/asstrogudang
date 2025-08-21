@@ -1,4 +1,4 @@
-const CACHE_NAME = "gudang-bandung-raya-cache-v1";
+const CACHE_NAME = "gudang-bandung-raya-cache-v2";
 const STATIC_CACHE_URLS = [
   // Core App Shell
   "index.html",
