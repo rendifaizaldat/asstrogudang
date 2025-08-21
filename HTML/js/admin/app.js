@@ -1,3 +1,5 @@
+// HTML/js/admin/app.js
+
 import { supabase } from "../utils.js";
 import { AppConfig } from "../config.js";
 import {
@@ -55,8 +57,9 @@ class AdminController {
     const sessionData = StorageUtils.getItem(AppConfig.STORAGE_KEYS.USER);
     const userRole = sessionData?.custom_profile?.role?.toLowerCase();
 
-    if (userRole !== "admin") {
-      Logger.warn("Akses ditolak. Pengguna bukan admin atau tidak login.");
+    // Perubahan: Izinkan 'user' masuk, tapi berikan batasan nanti
+    if (!userRole) {
+      Logger.warn("Akses ditolak. Pengguna tidak login.");
       UIUtils.createToast("error", "Anda tidak memiliki akses ke halaman ini.");
       setTimeout(
         () => (window.location.href = "../../" + AppConfig.ROUTES.LOGIN),
@@ -68,9 +71,81 @@ class AdminController {
     this.state.setUser(sessionData.user);
     const adminGreeting = document.getElementById("admin-greeting");
     if (adminGreeting) {
-      adminGreeting.textContent = sessionData.custom_profile.nama || "Admin";
+      adminGreeting.textContent = sessionData.custom_profile.nama || "Pengguna";
     }
+
+    // Terapkan batasan untuk role 'user'
+    if (userRole === "user") {
+      this.applyUserRoleRestrictions();
+    }
+
     return true;
+  }
+
+  applyUserRoleRestrictions() {
+    // Sembunyikan semua tab navigasi kecuali Piutang Outlet
+    const navLinks = document.querySelectorAll(
+      "#admin-nav .nav-link, #admin-nav-mobile .nav-link"
+    );
+    navLinks.forEach((link) => {
+      const target = link.getAttribute("data-bs-target");
+      if (target !== "#piutang-outlet") {
+        link.parentElement.style.display = "none";
+      } else {
+        // Pastikan tab piutang aktif
+        link.classList.add("active");
+        link.setAttribute("aria-selected", "true");
+        const correspondingPane = document.querySelector(target);
+        if (correspondingPane) {
+          correspondingPane.classList.add("show", "active");
+        }
+      }
+    });
+
+    // Sembunyikan dashboard yang aktif by default
+    const dashboardTab = document.querySelector(
+      'button[data-bs-target="#dashboard"]'
+    );
+    const dashboardPane = document.getElementById("dashboard");
+    if (dashboardTab && dashboardPane) {
+      dashboardTab.classList.remove("active");
+      dashboardTab.setAttribute("aria-selected", "false");
+      dashboardPane.classList.remove("show", "active");
+    }
+
+    // Nonaktifkan semua tombol kecuali yang diizinkan di tab Piutang
+    document.addEventListener("DOMContentLoaded", () => {
+      const piutangTabContent = document.getElementById("piutang-outlet");
+      if (piutangTabContent) {
+        // Nonaktifkan semua tombol di dalam tab piutang
+        const allButtons = piutangTabContent.querySelectorAll("button");
+        allButtons.forEach((btn) => {
+          // Izinkan tombol 'Buat Tagihan' dan 'Print'
+          if (
+            !btn.classList.contains("btn-print-invoice") &&
+            btn.id !== "buatTagihanBtn"
+          ) {
+            btn.disabled = true;
+            btn.style.pointerEvents = "none";
+            btn.title = "Akses terbatas";
+          }
+        });
+
+        // Sembunyikan tombol-tombol yang tidak seharusnya ada
+        const statusToggles =
+          piutangTabContent.querySelectorAll(".status-toggle");
+        const editButtons = piutangTabContent.querySelectorAll(
+          ".btn-edit-transaction"
+        );
+        const deleteButtons = piutangTabContent.querySelectorAll(
+          ".btn-delete-transaction"
+        );
+
+        statusToggles.forEach((el) => el.parentElement.parentElement.remove());
+        editButtons.forEach((el) => el.remove());
+        deleteButtons.forEach((el) => el.remove());
+      }
+    });
   }
 
   bindElements() {
@@ -95,6 +170,10 @@ class AdminController {
       hapusSemuaBtn: document.getElementById("hapusSemuaBtn"),
       loader: document.getElementById("loader"),
       mainContent: document.getElementById("main-content-tabs"),
+      // Purchase Order Elements
+      poBarangSearchInput: document.getElementById("poBarangSearchInput"),
+      poItemQty: document.getElementById("poItemQty"),
+      addPOItemBtn: document.getElementById("addPOItemBtn"),
     };
   }
 
@@ -372,6 +451,26 @@ class AdminController {
           this.state.clearPurchaseOrder();
         }
       });
+
+    // **** START: UX Improvement for Purchase Order ****
+    if (this.elements.poBarangSearchInput) {
+      this.elements.poBarangSearchInput.addEventListener(
+        "item-selected-by-enter",
+        () => {
+          this.elements.poItemQty.focus();
+        }
+      );
+    }
+
+    if (this.elements.poItemQty) {
+      this.elements.poItemQty.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.elements.addPOItemBtn.click();
+        }
+      });
+    }
+    // **** END: UX Improvement for Purchase Order ****
   }
 
   handleStateUpdate(event, data) {
@@ -398,7 +497,7 @@ class AdminController {
         this.renderer.renderVendorOptions(data.value);
         this.renderer.renderVendorsTable();
       }
-      if (data.key === "piutang") {
+      if (data.key === "receivables") {
         const piutangTab = document.querySelector("#piutang-outlet-tab.active");
         if (piutangTab) {
           this.renderer.renderPiutangTable();
@@ -857,6 +956,14 @@ class AdminController {
   }
 
   handleDynamicClicks(e) {
+    const removePOItemBtn = e.target.closest(".remove-po-item-btn");
+    if (removePOItemBtn) {
+      const index = parseInt(removePOItemBtn.dataset.index, 10);
+      if (confirm("Hapus item ini dari pesanan?")) {
+        this.state.removePOItem(index);
+      }
+      return;
+    }
     const editVendorBtn = e.target.closest(".btn-edit-vendor");
     if (editVendorBtn) {
       const vendorId = editVendorBtn.dataset.id;
