@@ -1,4 +1,4 @@
-const CACHE_NAME = "gudang-bandung-raya-cache-v2";
+const CACHE_NAME = "gudang-bandung-raya-cache-v4";
 const STATIC_CACHE_URLS = [
   // Core App Shell
   "index.html",
@@ -43,10 +43,8 @@ const STATIC_CACHE_URLS = [
 ];
 
 self.addEventListener("install", (event) => {
-  console.log("[Service Worker] Install");
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log("[Service Worker] Pre-caching offline page");
       return cache.addAll(STATIC_CACHE_URLS);
     })
   );
@@ -54,13 +52,11 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  console.log("[Service Worker] Activate");
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log("[Service Worker] Clearing old cache:", cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -112,7 +108,6 @@ self.addEventListener("message", (event) => {
 });
 self.addEventListener("sync", (event) => {
   if (event.tag === "sync-offline-requests") {
-    console.log("[Service Worker] Background sync event triggered.");
     event.waitUntil(syncOfflineRequests());
   }
 });
@@ -136,11 +131,8 @@ async function syncOfflineRequests() {
     );
 
     if (requests.length === 0) {
-      console.log("[Service Worker] No offline requests to sync.");
       return;
     }
-
-    console.log(`[Service Worker] Found ${requests.length} requests to sync.`);
 
     for (const req of requests) {
       try {
@@ -149,9 +141,6 @@ async function syncOfflineRequests() {
         const response = await fetch(req.url, req.options);
 
         if (response.ok) {
-          console.log(
-            `Request ${req.id} sent successfully! Deleting from queue.`
-          );
           store.delete(req.id);
         } else {
           // Jika server menolak (misal, stok habis), hapus dari antrean agar tidak dicoba terus-menerus.
