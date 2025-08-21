@@ -103,171 +103,126 @@ class AdminRenderer {
     );
   }
 
-  renderPiutangTable(searchTerm = "", statusFilter = "all") {
-    const piutangContainer = document.getElementById(
-      "piutang-outlet-container"
-    );
-    if (!piutangContainer) {
-      console.error(
-        "[DEBUG-RENDERER] FATAL: Container #piutang-outlet-container tidak ditemukan!"
-      );
+  renderPiutangTable(data, isLoading = false, isError = false) {
+    const container = document.getElementById("piutang-outlet-container");
+    if (!container) return;
+
+    if (isLoading) {
+      container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Memuat data...</p></div>`;
+      return;
+    }
+    if (isError) {
+      container.innerHTML = `<div class="text-center text-danger py-5"><i class="bi bi-exclamation-triangle fs-2"></i><p>Gagal memuat data.</p></div>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      container.innerHTML = `<div class="text-center text-muted py-5"><i class="bi bi-inbox fs-2"></i><p>Tidak ada data piutang ditemukan.</p></div>`;
       return;
     }
 
-    // Ambil data SETELAH memastikan container ada
-    const allPiutang = this.state.searchData(searchTerm, "piutang");
-    // 1. Group by outlet name
-    const groupedByOutlet = allPiutang.reduce((acc, p) => {
+    const groupedByOutlet = data.reduce((acc, p) => {
       const key = p.outlet_name || "Tanpa Nama Outlet";
       if (!acc[key]) {
-        acc[key] = [];
+        acc[key] = { items: [], totalLunas: 0, totalBelumLunas: 0 };
       }
-      acc[key].push(p);
+      acc[key].items.push(p);
+      if (this.isLunas(p.status)) {
+        acc[key].totalLunas += p.total_tagihan;
+      } else {
+        acc[key].totalBelumLunas += p.total_tagihan;
+      }
       return acc;
     }, {});
 
-    if (Object.keys(groupedByOutlet).length === 0) {
-      piutangContainer.innerHTML = `
-            <div class="text-center text-muted py-5">
-                <i class="bi bi-search fs-2 mb-2"></i>
-                <p>Tidak ada data piutang ditemukan untuk pencarian ini.</p>
-            </div>`;
-      return;
-    }
+    let html = Object.entries(groupedByOutlet)
+      .map(([outletName, groupData]) => {
+        const totalKeseluruhan =
+          groupData.totalLunas + groupData.totalBelumLunas;
+        return `
+              <div class="card glass-card mb-4 outlet-group" data-outlet-name="${outletName}">
+                  <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap p-2">
+                      <h6 class="mb-0 fw-bold"><i class="bi bi-shop me-2"></i>${outletName}</h6>
+                      <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+                          <div class="outlet-totals small me-2">
+                              <span class="badge bg-success">Lunas: ${CurrencyFormatter.format(
+                                groupData.totalLunas
+                              )}</span>
+                              <span class="badge bg-warning text-dark">Belum: ${CurrencyFormatter.format(
+                                groupData.totalBelumLunas
+                              )}</span>
+                              <span class="badge bg-primary">Total: ${CurrencyFormatter.format(
+                                totalKeseluruhan
+                              )}</span>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="table-responsive">
+                      <table class="table table-hover mb-0" style="font-size: 0.85rem;">
+                          <thead>
+                              <tr>
+                                  <th>ID Invoice</th>
+                                  <th>Tanggal</th>
+                                  <th class="text-end">Total</th>
+                                  <th>Status</th>
+                                  <th>Bukti</th>
+                                  <th style="width: 200px;" class="text-center">Aksi</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              ${groupData.items
+                                .map((p) => this.createPiutangRow(p))
+                                .join("")}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          `;
+      })
+      .join("");
 
-    let html = "";
-    for (const outletName in groupedByOutlet) {
-      const items = groupedByOutlet[outletName];
+    container.innerHTML = html;
+  }
 
-      const totalLunas = items
-        .filter((i) => i.status === "Lunas")
-        .reduce((sum, i) => sum + i.total_tagihan, 0);
-      const totalBelumLunas = items
-        .filter((i) => i.status !== "Lunas")
-        .reduce((sum, i) => sum + i.total_tagihan, 0);
-      const totalKeseluruhan = totalLunas + totalBelumLunas;
-
-      // Terapkan filter status di sini
-      const filteredItems =
-        statusFilter === "all"
-          ? items
-          : items.filter(
-              (item) => (item.status || "Belum Lunas") === statusFilter
-            );
-
-      html += `
-            <div class="card glass-card mb-4 outlet-group" data-outlet-name="${outletName}">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap p-2">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-shop me-2"></i>${outletName}</h6>
-                    <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
-                        <div class="outlet-totals small me-2">
-                            <span class="badge bg-success">Lunas: ${CurrencyFormatter.format(
-                              totalLunas
-                            )}</span>
-                            <span class="badge bg-warning text-dark">Belum: ${CurrencyFormatter.format(
-                              totalBelumLunas
-                            )}</span>
-                            <span class="badge bg-primary">Total: ${CurrencyFormatter.format(
-                              totalKeseluruhan
-                            )}</span>
-                        </div>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-secondary piutang-filter-btn ${
-                              statusFilter === "all" ? "active" : ""
-                            }" data-status="all">Semua</button>
-                            <button class="btn btn-outline-secondary piutang-filter-btn ${
-                              statusFilter === "Lunas" ? "active" : ""
-                            }" data-status="Lunas">Lunas</button>
-                            <button class="btn btn-outline-secondary piutang-filter-btn ${
-                              statusFilter === "Belum Lunas" ? "active" : ""
-                            }" data-status="Belum Lunas">Belum</button>
-                        </div>
+  // Tambahkan fungsi pembantu ini di dalam kelas AdminRenderer
+  createPiutangRow(p) {
+    const statusClass = this.getStatusBadgeClass(p.status);
+    return `
+        <tr class="table-row">
+            <td><span class="fw-semibold">${p.invoice_id}</span></td>
+            <td>${this.formatDate(p.tanggal_pengiriman)}</td>
+            <td>${p.outlet_name}</td>
+            <td class="text-end fw-bold">${CurrencyFormatter.format(
+              p.total_tagihan
+            )}</td>
+            <td><span class="badge ${statusClass} rounded-pill">${
+      p.status || "Belum Lunas"
+    }</span></td>
+            <td>${this.renderBuktiTransfer(
+              p.bukti_transfer,
+              p.id,
+              "piutang"
+            )}</td>
+            <td class="text-center">
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="form-check form-switch me-2" title="Ubah Status Lunas">
+                        <input class="form-check-input status-toggle" type="checkbox" ${
+                          this.isLunas(p.status) ? "checked" : ""
+                        } data-type="piutang" data-id="${p.id}">
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary btn-print-invoice" data-id="${
+                          p.id
+                        }" title="Cetak Ulang Nota"><i class="bi bi-printer"></i></button>
+                        <button class="btn btn-outline-primary btn-edit-transaction" data-id="${
+                          p.id
+                        }" data-type="piutang"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-outline-danger btn-delete-transaction" data-id="${
+                          p.id
+                        }" data-type="piutang"><i class="bi bi-trash"></i></button>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" style="font-size: 0.85rem;">
-                        <thead>
-                            <tr>
-                                <th>ID Invoice</th>
-                                <th>Tanggal</th>
-                                <th class="text-end">Total</th>
-                                <th>Status</th>
-                                <th>Bukti</th>
-                                <th style="width: 150px;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${
-                              filteredItems.length > 0
-                                ? filteredItems
-                                    .map((p) => {
-                                      const isOverdue = this.isOverdue(
-                                        p.created_at
-                                      );
-                                      const statusClass =
-                                        this.getStatusBadgeClass(p.status);
-                                      return `
-                                    <tr class="table-row ${
-                                      isOverdue ? "table-warning" : ""
-                                    }" data-status="${
-                                        p.status || "Belum Lunas"
-                                      }">
-                                        <td><span class="fw-semibold">${
-                                          p.invoice_id
-                                        }</span></td>
-                                        <td>${this.formatDate(
-                                          p.tanggal_pengiriman
-                                        )}</td>
-                                        <td class="text-end fw-bold">${CurrencyFormatter.format(
-                                          p.total_tagihan
-                                        )}</td>
-                                        <td><span class="badge ${statusClass} rounded-pill">${
-                                        p.status || "Belum Lunas"
-                                      }</span></td>
-                                        <td>${this.renderBuktiTransfer(
-                                          p.bukti_transfer,
-                                          p.id,
-                                          "piutang"
-                                        )}</td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="form-check form-switch me-2" title="Ubah Status Lunas">
-                                                    <input class="form-check-input status-toggle" type="checkbox" ${
-                                                      this.isLunas(p.status)
-                                                        ? "checked"
-                                                        : ""
-                                                    } data-type="piutang" data-id="${
-                                        p.id
-                                      }">
-                                                </div>
-                                                <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-outline-secondary btn-print-invoice" data-id="${
-                                                      p.id
-                                                    }" title="Cetak Ulang Nota"><i class="bi bi-printer"></i></button>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `;
-                                    })
-                                    .join("")
-                                : `<tr><td colspan="6" class="text-center text-muted py-3">Tidak ada data untuk filter ini.</td></tr>`
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    }
-
-    piutangContainer.innerHTML = html;
-
-    piutangContainer.querySelectorAll(".piutang-filter-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const currentSearch = document.getElementById("piutang-search").value;
-        this.renderPiutangTable(currentSearch, btn.dataset.status);
-      });
-    });
+            </td>
+        </tr>`;
   }
 
   filterPiutangTable(outletGroup, status) {
@@ -288,63 +243,132 @@ class AdminRenderer {
       .classList.add("active");
   }
 
-  renderHutangTable(searchTerm = "", statusFilter = "all") {
-    const allHutang = this.state.getData("hutang");
-    const hutangSummary = this.state.getFinancialSummary(allHutang);
+  renderHutangTable(data, isLoading = false, isError = false) {
+    const container = document.getElementById("hutang-vendor-container");
+    const summaryContainer = document.getElementById("hutang-summary-cards");
+    if (!container || !summaryContainer) return;
+
+    if (isLoading) {
+      container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2">Memuat data...</p></div>`;
+      summaryContainer.innerHTML = "";
+      return;
+    }
+    if (isError) {
+      container.innerHTML = `<div class="text-center text-danger py-5"><i class="bi bi-exclamation-triangle fs-2"></i><p>Gagal memuat data.</p></div>`;
+      summaryContainer.innerHTML = "";
+      return;
+    }
+
+    // Hitung total keseluruhan untuk summary cards
+    const totalSummary = data.reduce(
+      (acc, item) => {
+        const amount = item.total_tagihan || 0;
+        acc.total += amount;
+        if (this.isLunas(item.status)) {
+          acc.lunas += amount;
+        } else {
+          acc.belumLunas += amount;
+        }
+        return acc;
+      },
+      { total: 0, lunas: 0, belumLunas: 0 }
+    );
+
     this.renderFinancialSummaryCards(
       "hutang-summary-cards",
-      hutangSummary,
+      totalSummary,
       "Hutang"
     );
-    this.renderGenericTable({
-      dataType: "hutang",
-      searchTerm,
-      statusFilter,
-      tbodyId: "hutang-table-body",
-      columns: 8,
-      emptyMessage: "Tidak ada data hutang",
-      rowGenerator: (h) => {
-        // Pemeriksaan keamanan: Jika objek h tidak valid, jangan render baris ini
-        if (!h) return "";
 
-        const statusClass = this.getStatusBadgeClass(h.status);
-        return `
-              <tr class="table-row">
-                <td><span class="fw-semibold">${
-                  h.no_nota_vendor || "-"
-                }</span></td>
-                <td>${this.formatDate(h.tanggal_nota)}</td>
-                <td>${h.nama_vendor || "Vendor Dihapus"}</td>
-                <td class="text-end fw-bold">${CurrencyFormatter.format(
-                  h.total_tagihan
-                )}</td>
-                <td><span class="badge ${statusClass} rounded-pill">${
-          h.status || "Belum Lunas"
-        }</span></td>
-                <td>${this.renderBuktiTransfer(
-                  h.bukti_transfer,
-                  h.id,
-                  "hutang"
-                )}</td>
-                <td>
-                  <div class="form-check form-switch"><input class="form-check-input status-toggle" type="checkbox" ${
-                    this.isLunas(h.status) ? "checked" : ""
-                  } data-type="hutang" data-id="${h.id}"></div>
-                </td>
-                <td>
-                  <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary btn-edit-transaction" data-id="${
-                      h.id
-                    }" data-type="hutang"><i class="bi bi-pencil-square"></i></button>
-                    <button class="btn btn-outline-danger btn-delete-transaction" data-id="${
-                      h.id
-                    }" data-type="hutang"><i class="bi bi-trash"></i></button>
+    if (!data || data.length === 0) {
+      container.innerHTML = `<div class="text-center text-muted py-5"><i class="bi bi-inbox fs-2"></i><p>Tidak ada data hutang ditemukan.</p></div>`;
+      return;
+    }
+
+    const groupedByVendor = data.reduce((acc, p) => {
+      const key = p.nama_vendor || "Tanpa Nama Vendor";
+      if (!acc[key]) {
+        acc[key] = { items: [], total: 0 };
+      }
+      acc[key].items.push(p);
+      acc[key].total += p.total_tagihan;
+      return acc;
+    }, {});
+
+    const tableHTML = Object.entries(groupedByVendor)
+      .map(
+        ([vendorName, groupData]) => `
+      <div class="card glass-card mb-4">
+          <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <h6 class="mb-0 fw-bold"><i class="bi bi-truck me-2"></i>${vendorName}</h6>
+              <span class="badge bg-primary">Total: ${CurrencyFormatter.format(
+                groupData.total
+              )}</span>
+          </div>
+          <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                      <tr>
+                          <th>No Nota</th>
+                          <th>Tanggal</th>
+                          <th class="text-end">Total</th>
+                          <th>Status</th>
+                          <th>Bukti</th>
+                          <th class="text-center" style="width: 200px;">Aksi</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      ${groupData.items
+                        .map((h) => this.createHutangRow(h))
+                        .join("")}
+                  </tbody>
+              </table>
+          </div>
+      </div>
+    `
+      )
+      .join("");
+
+    container.innerHTML = tableHTML;
+  }
+
+  createHutangRow(h) {
+    const statusClass = this.getStatusBadgeClass(h.status);
+    return `
+          <tr class="table-row">
+              <td><span class="fw-semibold">${
+                h.no_nota_vendor || "-"
+              }</span></td>
+              <td>${this.formatDate(h.tanggal_nota)}</td>
+              <td class="text-end fw-bold">${CurrencyFormatter.format(
+                h.total_tagihan
+              )}</td>
+              <td><span class="badge ${statusClass} rounded-pill">${
+      h.status || "Belum Lunas"
+    }</span></td>
+              <td>${this.renderBuktiTransfer(
+                h.bukti_transfer,
+                h.id,
+                "hutang"
+              )}</td>
+              <td class="text-center">
+                  <div class="d-flex justify-content-center align-items-center">
+                      <div class="form-check form-switch me-2" title="Ubah Status Lunas">
+                          <input class="form-check-input status-toggle" type="checkbox" ${
+                            this.isLunas(h.status) ? "checked" : ""
+                          } data-type="hutang" data-id="${h.id}">
+                      </div>
+                      <div class="btn-group btn-group-sm">
+                          <button class="btn btn-outline-primary btn-edit-transaction" data-id="${
+                            h.id
+                          }" data-type="hutang"><i class="bi bi-pencil-square"></i></button>
+                          <button class="btn btn-outline-danger btn-delete-transaction" data-id="${
+                            h.id
+                          }" data-type="hutang"><i class="bi bi-trash"></i></button>
+                      </div>
                   </div>
-                </td>
-              </tr>
-            `;
-      },
-    });
+              </td>
+          </tr>`;
   }
 
   renderBarangMasukPreview() {
@@ -501,60 +525,72 @@ class AdminRenderer {
     this.animateTableRows(tbody);
   }
 
-  renderInventarisTable(searchTerm = "") {
-    this.renderGenericTable({
-      dataType: "inventaris",
-      searchTerm,
-      tbodyId: "inventaris-table-body",
-      columns: 7,
-      emptyMessage: "Tidak ada data inventaris",
-      rowGenerator: (item) => {
-        const stokStatus = this.getStokStatus(item.sisa_stok);
+  renderInventarisTable(
+    products,
+    isLoading = false,
+    isError = false,
+    pagination = null
+  ) {
+    const tbody = document.getElementById("inventaris-table-body");
+    const paginationControls = document.getElementById("pagination-controls");
+    const paginationInfo = document.getElementById("pagination-info");
+    if (!tbody || !paginationControls || !paginationInfo) return;
 
+    // Bersihkan konten sebelumnya
+    tbody.innerHTML = "";
+    paginationControls.innerHTML = "";
+    paginationInfo.innerHTML = "";
+
+    if (isLoading) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>`;
+      return;
+    }
+    if (isError) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-5">Gagal memuat data produk.</td></tr>`;
+      return;
+    }
+    if (!products || products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">Tidak ada produk ditemukan.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = products
+      .map((item) => {
         return `
-    <tr class="table-row">
-      <td><span class="fw-semibold">${item.kode_produk || item.id}</span></td>
-      <td>${item.nama}</td>
-      <td><span class="badge bg-light text-dark border">${item.unit}</span></td>
-      <td>
-        <input 
-          type="number" 
-          class="form-control form-control-sm stok-input" 
-          value="${item.sisa_stok}" 
-          min="0" 
-          data-product-id="${item.id}" 
-          data-original-value="${item.sisa_stok}"
-        >
-      </td>
-      <td class="text-center">
-        <div class="btn-group btn-group-sm">
-          <button 
-            class="btn btn-primary save-stok-btn" 
-            data-product-id="${item.id}" 
-            disabled
-          >
-            <i class="bi bi-check-lg"></i> Simpan
-          </button>
-          <button 
-            class="btn btn-outline-secondary btn-edit-product" 
-            data-product-id="${item.id}" 
-            title="Edit Detail Produk"
-          >
-            <i class="bi bi-pencil-square"></i>
-          </button>
-          <button 
-            class="btn btn-outline-danger btn-delete-product" 
-            data-product-id="${item.id}" 
-            title="Hapus Produk"
-          >
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>
-      </td>
-    </tr>
-  `;
-      },
-    });
+        <tr class="table-row">
+            <td><span class="fw-semibold">${
+              item.kode_produk || item.id
+            }</span></td>
+            <td>${item.nama}</td>
+            <td><span class="badge bg-light text-dark border">${
+              item.unit
+            }</span></td>
+            <td><input type="number" class="form-control form-control-sm stok-input" value="${
+              item.sisa_stok
+            }" min="0" data-product-id="${item.id}" data-original-value="${
+          item.sisa_stok
+        }"></td>
+            <td class="text-center">
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-primary save-stok-btn" data-product-id="${
+                      item.id
+                    }" disabled><i class="bi bi-check-lg"></i> Simpan</button>
+                    <button class="btn btn-outline-secondary btn-edit-product" data-product-id="${
+                      item.id
+                    }" title="Edit Detail Produk"><i class="bi bi-pencil-square"></i></button>
+                    <button class="btn btn-outline-danger btn-delete-product" data-product-id="${
+                      item.id
+                    }" title="Hapus Produk"><i class="bi bi-trash"></i></button>
+                </div>
+            </td>
+        </tr>`;
+      })
+      .join("");
+
+    if (pagination) {
+      this.renderPaginationControls(pagination);
+    }
+    this.animateTableRows(tbody);
   }
 
   renderDashboardDetails(details) {
@@ -1076,6 +1112,65 @@ class AdminRenderer {
       .join("");
 
     this.animationController.animateCards(container.querySelectorAll(".card"));
+  }
+  renderPaginationControls(pagination) {
+    const { currentPage, totalProducts, limit } = pagination;
+    const totalPages = Math.ceil(totalProducts / limit);
+    const infoEl = document.getElementById("pagination-info");
+    const controlsEl = document.getElementById("pagination-controls");
+
+    if (totalPages <= 1) {
+      infoEl.innerHTML = `Total ${totalProducts} produk`;
+      controlsEl.innerHTML = "";
+      return;
+    }
+
+    const startItem = (currentPage - 1) * limit + 1;
+    const endItem = Math.min(currentPage * limit, totalProducts);
+    infoEl.innerHTML = `Menampilkan ${startItem} - ${endItem} dari ${totalProducts} produk`;
+
+    let buttons = "";
+
+    // Tombol Previous
+    buttons += `<button class="btn btn-sm btn-outline-secondary" data-page="${
+      currentPage - 1
+    }" ${currentPage === 1 ? "disabled" : ""}>&laquo;</button>`;
+
+    // Tombol Halaman
+    // Logika untuk menampilkan halaman secara dinamis (misal: 1 ... 4 5 6 ... 10)
+    let pageNumbers = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      pageNumbers.push(1);
+      if (currentPage > 3) pageNumbers.push("...");
+
+      let startPage = Math.max(2, currentPage - 1);
+      let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+
+      if (currentPage < totalPages - 2) pageNumbers.push("...");
+      pageNumbers.push(totalPages);
+    }
+
+    pageNumbers.forEach((num) => {
+      if (num === "...") {
+        buttons += `<span class="btn btn-sm disabled">...</span>`;
+      } else {
+        buttons += `<button class="btn btn-sm ${
+          num === currentPage ? "btn-primary" : "btn-outline-secondary"
+        }" data-page="${num}">${num}</button>`;
+      }
+    });
+
+    buttons += `<button class="btn btn-sm btn-outline-secondary" data-page="${
+      currentPage + 1
+    }" ${currentPage === totalPages ? "disabled" : ""}>&raquo;</button>`;
+
+    controlsEl.innerHTML = `<div class="btn-group btn-group-sm">${buttons}</div>`;
   }
 }
 
