@@ -1177,17 +1177,27 @@ class CatalogController {
         UIUtils.createToast("info", "Memperbarui data produk...", 2000);
       }
 
-      // Menggunakan APIClient baru untuk refresh
-      const productsData = await APIClient.get("manage-products");
+      const { data: productsData, error } = await APIClient.get(
+        "manage-products"
+      );
+      if (error) throw error;
 
       if (productsData) {
-        this.state.setProducts(productsData);
-        if (!silent) {
-          UIUtils.createToast(
-            "success",
-            "Data produk berhasil diperbarui",
-            3000
-          );
+        const productsArray = Array.isArray(productsData)
+          ? productsData
+          : productsData.products;
+
+        if (Array.isArray(productsArray)) {
+          this.state.setProducts(productsArray);
+          if (!silent) {
+            UIUtils.createToast(
+              "success",
+              "Data produk berhasil diperbarui",
+              3000
+            );
+          }
+        } else {
+          throw new Error("Format data produk tidak valid saat refresh.");
         }
       }
     } catch (error) {
