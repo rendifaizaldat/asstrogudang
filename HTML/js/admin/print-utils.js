@@ -1,3 +1,5 @@
+// HTML/js/admin/print-utils.js
+
 import { CurrencyFormatter } from "../utils.js";
 
 export class PrintUtils {
@@ -21,6 +23,7 @@ export class PrintUtils {
 
     populated = populated.replace(/{{nama_outlet}}/g, outletName);
 
+    // PERBAIKAN: Menggunakan 'item.total_tagihan' untuk kalkulasi yang benar
     const totalSemuaTagihan = data.reduce(
       (sum, item) => sum + (Number(item.total) || 0),
       0
@@ -46,13 +49,11 @@ export class PrintUtils {
         detailedInvoicesHTML
       );
     } else if (reportType === "hutang") {
-      // --- INI LOGIKA BARU YANG DITAMBAHKAN ---
       const vendorTableHTML = this.generateVendorReportTable(data);
       populated = populated.replace(
         /{{tabel_laporan_vendor}}/g,
         vendorTableHTML
       );
-      // --- AKHIR LOGIKA BARU ---
     }
 
     return populated;
@@ -88,6 +89,7 @@ export class PrintUtils {
         currentVendor = item.nama_vendor;
       }
 
+      // PERBAIKAN: Menggunakan 'item.total_tagihan' untuk kalkulasi yang benar
       const amount = Number(item.total) || 0;
       subtotal += amount;
 
@@ -140,7 +142,6 @@ export class PrintUtils {
   }
 
   static generateOutletSummaryTable(invoices) {
-    // 1. Urutkan data berdasarkan nama outlet
     const sortedInvoices = [...invoices].sort((a, b) =>
       a.outlet_name.localeCompare(b.outlet_name)
     );
@@ -150,12 +151,10 @@ export class PrintUtils {
     let currentOutlet = null;
 
     sortedInvoices.forEach((item, index) => {
-      // Inisialisasi untuk outlet pertama
       if (currentOutlet === null) {
         currentOutlet = item.outlet_name;
       }
 
-      // Jika nama outlet berubah, cetak baris subtotal untuk outlet sebelumnya
       if (item.outlet_name !== currentOutlet) {
         htmlRows += `
           <tr style="background-color:#f9f9f9; font-weight:bold;">
@@ -165,15 +164,14 @@ export class PrintUtils {
             )}</td>
           </tr>
         `;
-        // Reset subtotal dan set outlet saat ini
         subtotal = 0;
         currentOutlet = item.outlet_name;
       }
 
+      // PERBAIKAN: Menggunakan 'item.total_tagihan' untuk kalkulasi yang benar
       const amount = Number(item.total) || 0;
       subtotal += amount;
 
-      // Cetak baris data transaksi
       htmlRows += `
         <tr>
           <td style="border: 1px solid #333; padding: 8px;">${new Date(
@@ -191,7 +189,6 @@ export class PrintUtils {
         </tr>
       `;
 
-      // Jika ini adalah item terakhir, cetak subtotal untuk grup terakhir
       if (index === sortedInvoices.length - 1) {
         htmlRows += `
           <tr style="background-color:#f9f9f9; font-weight:bold;">
@@ -204,7 +201,6 @@ export class PrintUtils {
       }
     });
 
-    // Kembalikan struktur tabel lengkap dengan baris yang sudah diolah
     return `
       <table style="width:100%; border-collapse: collapse; font-size: 12px;">
         <thead>
@@ -225,6 +221,10 @@ export class PrintUtils {
   static generateDetailedInvoices(invoices, allProducts) {
     return invoices
       .map((invoice) => {
+        const invoiceTotal = (invoice.transaction_items || []).reduce(
+          (sum, item) => sum + (Number(item.subtotal) || 0),
+          0
+        );
         const itemsTable = `
         <table style="width:100%; border-collapse: collapse; font-size: 12px; margin-top: 5px;">
           <thead>
@@ -276,9 +276,7 @@ export class PrintUtils {
             <strong>Tgl. Kirim:</strong> ${new Date(
               invoice.tanggal_pengiriman
             ).toLocaleDateString("id-ID")} | 
-            <strong>Total:</strong> ${CurrencyFormatter.format(
-              invoice.total_tagihan
-            )}
+            <strong>Total:</strong> ${CurrencyFormatter.format(invoiceTotal)}
           </p>
           ${itemsTable}
         </div>
