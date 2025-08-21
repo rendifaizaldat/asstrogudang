@@ -7,6 +7,21 @@ class AutocompleteInput {
 
     this.inputEl.addEventListener("input", () => this.onInput());
     this.inputEl.addEventListener("blur", () => this.onBlur());
+
+    // Tambahkan event listener untuk keyboard
+    this.inputEl.addEventListener("keydown", (e) => this.onKeydown(e));
+  }
+
+  onKeydown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const firstItem = this.getFirstItem();
+      if (firstItem) {
+        this.selectItem(firstItem.id);
+        // Kirim event custom untuk memberitahu app.js
+        this.inputEl.dispatchEvent(new Event("item-selected-by-enter"));
+      }
+    }
   }
 
   onInput() {
@@ -21,7 +36,7 @@ class AutocompleteInput {
     const filteredData = this.dataSource.filter(
       (item) =>
         item.nama.toLowerCase().includes(query) ||
-        item.kode_produk.toLowerCase().includes(query)
+        (item.kode_produk && item.kode_produk.toLowerCase().includes(query))
     );
 
     this.renderResults(filteredData, query);
@@ -40,7 +55,7 @@ class AutocompleteInput {
       <div class="autocomplete-item" data-id="${item.id}">
         ${this.highlightMatch(item.nama, query)}
         <small class="d-block text-muted">Kode: ${this.highlightMatch(
-          item.kode_produk,
+          item.kode_produk || "",
           query
         )} | Stok: ${item.sisa_stok}</small>
       </div>
@@ -53,6 +68,7 @@ class AutocompleteInput {
   }
 
   highlightMatch(text, query) {
+    if (!text) return "";
     const regex = new RegExp(`(${query})`, "gi");
     return text.replace(regex, "<strong>$1</strong>");
   }
@@ -61,16 +77,26 @@ class AutocompleteInput {
     this.resultsEl.querySelectorAll(".autocomplete-item").forEach((itemEl) => {
       itemEl.addEventListener("mousedown", (e) => {
         e.preventDefault();
-        const selectedId = itemEl.dataset.id;
-        this.selectedItem = this.dataSource.find(
-          (item) => item.id == selectedId
-        );
-        if (this.selectedItem) {
-          this.inputEl.value = this.selectedItem.nama;
-        }
-        this.hideResults();
+        this.selectItem(itemEl.dataset.id);
       });
     });
+  }
+
+  selectItem(selectedId) {
+    this.selectedItem = this.dataSource.find((item) => item.id == selectedId);
+    if (this.selectedItem) {
+      this.inputEl.value = this.selectedItem.nama;
+    }
+    this.hideResults();
+  }
+
+  getFirstItem() {
+    const firstItemEl = this.resultsEl.querySelector(".autocomplete-item");
+    if (firstItemEl) {
+      const firstItemId = firstItemEl.dataset.id;
+      return this.dataSource.find((item) => item.id == firstItemId);
+    }
+    return null;
   }
 
   getSelectedItem() {
