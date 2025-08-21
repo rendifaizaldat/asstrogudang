@@ -619,6 +619,7 @@ export class UpdateManager {
     const toastContainer = UIUtils.createToastContainer();
     const toastId = "update-toast";
 
+    // Hapus toast lama jika ada, untuk mencegah duplikasi
     const oldToast = document.getElementById(toastId);
     if (oldToast) {
       oldToast.remove();
@@ -644,14 +645,21 @@ export class UpdateManager {
 
     toastContainer.insertAdjacentHTML("beforeend", toastHTML);
     const reloadButton = document.getElementById("reload-button");
+
+    // --- START PERBAIKAN LOGIKA ---
     reloadButton.addEventListener("click", () => {
-      worker.postMessage({ type: "SKIP_WAITING" });
-      let refreshing;
+      // Nonaktifkan tombol agar tidak diklik berkali-kali
+      reloadButton.disabled = true;
+      reloadButton.textContent = "Memuat ulang...";
+
+      // Pasang listener yang akan dieksekusi HANYA KETIKA service worker baru sudah aktif
       navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (refreshing) return;
         window.location.reload();
-        refreshing = true;
       });
+
+      // Kirim pesan ke service worker yang sedang 'waiting' untuk menyuruhnya aktif
+      worker.postMessage({ type: "SKIP_WAITING" });
     });
+    // --- AKHIR PERBAIKAN LOGIKA ---
   }
 }
