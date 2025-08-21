@@ -979,6 +979,7 @@ class CatalogController {
       this.performanceMonitor.start("search");
       this.state.setSearchTerm(value);
       this.performanceMonitor.end("search");
+      this.setupInstallButton();
     }, AppConfig.CONSTANTS.DEBOUNCE_DELAY);
 
     const searchHandler = (e) => {
@@ -1046,8 +1047,49 @@ class CatalogController {
     });
 
     this.setupAutoRefresh();
+    this.setupInstallButton();
   }
+  setupInstallButton() {
+    let deferredPrompt;
+    const installButton = document.getElementById("installAppBtn");
 
+    if (!installButton) return;
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      // Mencegah browser menampilkan prompt instalasi standarnya
+      e.preventDefault();
+      // Simpan event agar bisa dipicu nanti
+      deferredPrompt = e;
+      // Tampilkan tombol instalasi kustom kita
+      installButton.style.display = "flex";
+    });
+
+    installButton.addEventListener("click", async () => {
+      if (deferredPrompt) {
+        // Tampilkan prompt instalasi yang disimpan
+        deferredPrompt.prompt();
+        // Tunggu pengguna merespons prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === "accepted") {
+          UIUtils.createToast("success", "Aplikasi berhasil diinstal!");
+        } else {
+          UIUtils.createToast("info", "Instalasi dibatalkan.");
+        }
+        // Reset prompt, karena hanya bisa digunakan sekali
+        deferredPrompt = null;
+        // Sembunyikan tombol setelah digunakan
+        installButton.style.display = "none";
+      }
+    });
+
+    window.addEventListener("appinstalled", () => {
+      UIUtils.createToast(
+        "success",
+        "Aplikasi telah terpasang di perangkat Anda."
+      );
+      installButton.style.display = "none";
+    });
+  }
   setupAutoRefresh() {
     setInterval(() => {
       if (document.visibilityState === "visible") {
