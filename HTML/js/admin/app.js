@@ -1,5 +1,3 @@
-// HTML/js/admin/app.js
-
 import { supabase } from "../utils.js";
 import { AppConfig } from "../config.js";
 import {
@@ -34,6 +32,12 @@ class AdminController {
     this.passwordProtectedActionTarget = null;
     this.userList = [];
     this.poBarangAutocomplete = null;
+    this.productPagination = {
+      currentPage: 1,
+      limit: 20,
+      totalProducts: 0,
+      searchTerm: "",
+    };
   }
 
   async init() {
@@ -241,11 +245,31 @@ class AdminController {
         }
       });
 
-    const applyInventarisSearch = UIUtils.debounce(() => {
-      this.renderer.renderInventarisTable(inventarisSearch.value);
-    }, 300);
+    const inventarisSearchInput = document.getElementById("inventaris-search");
+    const debouncedProductSearch = UIUtils.debounce(() => {
+      this.productPagination.searchTerm = inventarisSearchInput.value;
+      this.loadPaginatedProducts(1); // Selalu mulai dari halaman 1 saat mencari
+    }, 500);
+    inventarisSearchInput?.addEventListener("input", debouncedProductSearch);
 
-    inventarisSearch?.addEventListener("input", applyInventarisSearch);
+    document
+      .getElementById("inventaris-clear-search")
+      ?.addEventListener("click", () => {
+        inventarisSearchInput.value = "";
+        this.productPagination.searchTerm = "";
+        this.loadPaginatedProducts(1);
+      });
+
+    document
+      .getElementById("pagination-controls")
+      ?.addEventListener("click", (e) => {
+        if (e.target.tagName === "BUTTON") {
+          const page = parseInt(e.target.dataset.page, 10);
+          if (page) {
+            this.loadPaginatedProducts(page);
+          }
+        }
+      });
 
     inventarisClearBtn?.addEventListener("click", () => {
       inventarisSearch.value = "";
@@ -282,53 +306,6 @@ class AdminController {
     document
       .getElementById("editProductForm")
       ?.addEventListener("submit", (e) => this.handleUpdateProduct(e));
-
-    mainContent?.addEventListener(
-      "input",
-      UIUtils.debounce((e) => {
-        const targetId = e.target.id;
-        if (targetId === "piutang-search" || targetId === "hutang-search") {
-          const type = targetId.split("-")[0];
-          const searchTerm = e.target.value;
-          const statusFilter = document.getElementById(
-            `${type}-status-filter`
-          ).value;
-          if (type === "piutang")
-            this.renderer.renderPiutangTable(searchTerm, statusFilter);
-          if (type === "hutang")
-            this.renderer.renderHutangTable(searchTerm, statusFilter);
-        }
-      }, 300)
-    );
-
-    mainContent?.addEventListener("change", (e) => {
-      const targetId = e.target.id;
-      if (
-        targetId === "piutang-status-filter" ||
-        targetId === "hutang-status-filter"
-      ) {
-        const type = targetId.split("-")[0];
-        const statusFilter = e.target.value;
-        const searchTerm = document.getElementById(`${type}-search`).value;
-        if (type === "piutang")
-          this.renderer.renderPiutangTable(searchTerm, statusFilter);
-        if (type === "hutang")
-          this.renderer.renderHutangTable(searchTerm, statusFilter);
-      }
-    });
-
-    mainContent?.addEventListener("click", (e) => {
-      if (
-        e.target.id === "piutang-clear-filter" ||
-        e.target.id === "hutang-clear-filter"
-      ) {
-        const type = e.target.id.split("-")[0];
-        document.getElementById(`${type}-search`).value = "";
-        document.getElementById(`${type}-status-filter`).value = "all";
-        if (type === "piutang") this.renderer.renderPiutangTable();
-        if (type === "hutang") this.renderer.renderHutangTable();
-      }
-    });
 
     document.addEventListener("click", (e) => {
       this.handleProtectedActionClick(e);
@@ -471,6 +448,81 @@ class AdminController {
       });
     }
     // **** END: UX Improvement for Purchase Order ****
+    const piutangFilters = [
+      "piutang-outlet-filter",
+      "piutang-month-filter",
+      "piutang-year-filter",
+    ];
+    piutangFilters.forEach((id) => {
+      document
+        .getElementById(id)
+        ?.addEventListener("change", () => this.loadFilteredPiutang());
+    });
+    document
+      .getElementById("piutang-filter-reset")
+      ?.addEventListener("click", () => {
+        document.getElementById("piutang-outlet-filter").value = "";
+        this.populateDateFilters("piutang-month-filter", "piutang-year-filter");
+        this.loadFilteredPiutang();
+      });
+
+    const debouncedPiutangSearch = UIUtils.debounce(async () => {
+      const searchTerm = document.getElementById("piutang-search").value;
+      if (searchTerm.length < 3) {
+        this.loadFilteredPiutang(); // Kembali ke filter jika search dihapus
+        return;
+      }
+      this.renderer.renderPiutangTable([], true); // Tampilkan loader
+      try {
+        const { data, error } = await APIClient.get("manage-transactions", {
+          type: "piutang",
+          search_term: searchTerm,
+        });
+        if (error) throw error;
+        this.renderer.renderPiutangTable(data);
+      } catch (err) {
+        this.renderer.renderPiutangTable([], false, true);
+      }
+    }, 500);
+    document
+      .getElementById("piutang-search")
+      ?.addEventListener("input", debouncedPiutangSearch);
+
+    // --- Event Listeners untuk Hutang ---
+    const hutangFilters = ["hutang-month-filter", "hutang-year-filter"];
+    hutangFilters.forEach((id) => {
+      document
+        .getElementById(id)
+        ?.addEventListener("change", () => this.loadFilteredHutang());
+    });
+    document
+      .getElementById("hutang-filter-reset")
+      ?.addEventListener("click", () => {
+        this.populateDateFilters("hutang-month-filter", "hutang-year-filter");
+        this.loadFilteredHutang();
+      });
+
+    const debouncedHutangSearch = UIUtils.debounce(async () => {
+      const searchTerm = document.getElementById("hutang-search").value;
+      if (searchTerm.length < 3) {
+        this.loadFilteredHutang(); // Kembali ke filter jika search dihapus
+        return;
+      }
+      this.renderer.renderHutangTable([], true);
+      try {
+        const { data, error } = await APIClient.get("manage-transactions", {
+          type: "hutang",
+          search_term: searchTerm,
+        });
+        if (error) throw error;
+        this.renderer.renderHutangTable(data);
+      } catch (err) {
+        this.renderer.renderHutangTable([], false, true);
+      }
+    }, 500);
+    document
+      .getElementById("hutang-search")
+      ?.addEventListener("input", debouncedHutangSearch);
   }
 
   handleStateUpdate(event, data) {
@@ -734,13 +786,19 @@ class AdminController {
 
     switch (tabId) {
       case "#piutang-outlet":
-        this.renderer.renderPiutangTable();
+        this.populateDateFilters("piutang-month-filter", "piutang-year-filter");
+        this.populateOutletFilter().then(() => {
+          this.loadFilteredPiutang();
+        });
         break;
       case "#hutang-vendor":
-        this.renderer.renderHutangTable();
+        this.populateDateFilters("hutang-month-filter", "hutang-year-filter");
+        this.loadFilteredHutang();
         break;
       case "#master-produk":
-        this.renderer.renderInventarisTable();
+        this.productPagination.searchTerm = "";
+        document.getElementById("inventaris-search").value = "";
+        this.loadPaginatedProducts(1);
         break;
       case "#analytics":
         this.renderer.renderAnalytics();
@@ -1783,7 +1841,8 @@ class AdminController {
       if (error) throw error;
 
       // Isi dropdown dengan data yang diterima
-      selectEl.innerHTML = '<option value="all" selected>Semua Outlet</option>';
+      selectEl.innerHTML =
+        '<option value="all" selected>🏢 Semua Outlet</option>';
       outlets.forEach((outlet) => {
         const option = document.createElement("option");
         option.value = outlet;
@@ -2095,6 +2154,125 @@ class AdminController {
     document.getElementById("poBarangSearchInput").disabled = !enable;
     document.getElementById("poItemQty").disabled = !enable;
     document.getElementById("addPOItemBtn").disabled = !enable;
+  }
+  populateDateFilters(monthSelectorId, yearSelectorId) {
+    const monthSelect = document.getElementById(monthSelectorId);
+    const yearSelect = document.getElementById(yearSelectorId);
+    const months = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+
+    // Populate months
+    monthSelect.innerHTML = months
+      .map((month, index) => `<option value="${index + 1}">🗓️${month}</option>`)
+      .join("");
+    monthSelect.value = currentMonth;
+
+    // Populate years
+    yearSelect.innerHTML = "";
+    for (let i = 0; i < 5; i++) {
+      const year = currentYear - i;
+      yearSelect.innerHTML += `<option value="${year}">🗓️${year}</option>`;
+    }
+    yearSelect.value = currentYear;
+  }
+
+  async populateOutletFilter() {
+    const outletSelect = document.getElementById("piutang-outlet-filter");
+    if (!outletSelect) return;
+    outletSelect.innerHTML = '<option value="">Memuat...</option>';
+    try {
+      const { data: outlets, error } = await APIClient.get("get-outlets");
+      if (error) throw error;
+      outletSelect.innerHTML =
+        '<option value="">🏢 Semua Outlet</option>' +
+        outlets.map((o) => `<option value="${o}">${o}</option>`).join("");
+    } catch (err) {
+      outletSelect.innerHTML = '<option value="">Gagal memuat</option>';
+    }
+  }
+
+  async loadFilteredPiutang() {
+    const outlet = document.getElementById("piutang-outlet-filter").value;
+    const month = document.getElementById("piutang-month-filter").value;
+    const year = document.getElementById("piutang-year-filter").value;
+
+    this.renderer.renderPiutangTable([], true); // Tampilkan loader
+    try {
+      const { data, error } = await APIClient.get("manage-transactions", {
+        type: "piutang",
+        month,
+        year,
+        outlet_name: outlet || null,
+      });
+      if (error) throw error;
+      this.renderer.renderPiutangTable(data);
+    } catch (err) {
+      UIUtils.createToast("error", `Gagal memuat data piutang: ${err.message}`);
+      this.renderer.renderPiutangTable([], false, true); // Tampilkan error
+    }
+  }
+
+  async loadFilteredHutang() {
+    const month = document.getElementById("hutang-month-filter").value;
+    const year = document.getElementById("hutang-year-filter").value;
+
+    this.renderer.renderHutangTable([], true); // Tampilkan loader
+    try {
+      const { data, error } = await APIClient.get("manage-transactions", {
+        type: "hutang",
+        month,
+        year,
+      });
+      if (error) throw error;
+      this.renderer.renderHutangTable(data);
+    } catch (err) {
+      UIUtils.createToast("error", `Gagal memuat data hutang: ${err.message}`);
+      this.renderer.renderHutangTable([], false, true); // Tampilkan error
+    }
+  }
+  async loadPaginatedProducts(page = 1) {
+    this.productPagination.currentPage = page;
+    const { limit, searchTerm } = this.productPagination;
+
+    // Tampilkan status loading di tabel
+    this.renderer.renderInventarisTable([], true);
+
+    try {
+      const params = { page, limit };
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      const { data, error } = await APIClient.get("manage-products", params);
+      if (error) throw error;
+
+      this.productPagination.totalProducts = data.total_products;
+
+      // Kirim data produk, info paginasi, dan status loading=false ke renderer
+      this.renderer.renderInventarisTable(
+        data.products,
+        false,
+        false,
+        this.productPagination
+      );
+    } catch (err) {
+      UIUtils.createToast("error", `Gagal memuat produk: ${err.message}`);
+      this.renderer.renderInventarisTable([], false, true); // Tampilkan error
+    }
   }
 }
 
