@@ -1,3 +1,5 @@
+// HTML/js/auth.js
+
 import { supabase } from "./utils.js";
 import { AppConfig } from "./config.js";
 import { UIUtils } from "./utils.js";
@@ -9,11 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const showLogin = document.getElementById("showLogin");
   const loginButton = document.getElementById("loginButton");
 
-  // Form submission handlers
   loginForm.addEventListener("submit", handleLogin);
   signupForm.addEventListener("submit", handleSignup);
 
-  // Form toggle handlers
   showSignup.addEventListener("click", (e) => {
     e.preventDefault();
     loginForm.style.display = "none";
@@ -30,16 +30,14 @@ document.addEventListener("DOMContentLoaded", () => {
     UIUtils.setLoadingState(loginButton, true, "Mencari data...");
     const loginInput = document.getElementById("loginID").value;
     const password = document.getElementById("password").value;
-    let userEmail = loginInput; // Asumsikan input adalah email
+    let userEmail = loginInput;
 
-    // Cek jika input TIDAK mengandung '@', berarti itu adalah nama
     if (!loginInput.includes("@")) {
-      // Cari email berdasarkan nama pengguna di tabel 'users'
       const { data: profile, error: profileError } = await supabase
         .from("users")
-        .select("email") // Ambil kolom email
-        .eq("nama", loginInput) // Cari yang namanya cocok
-        .single(); // Ambil satu hasil saja
+        .select("email")
+        .eq("nama", loginInput)
+        .single();
 
       if (profileError || !profile) {
         UIUtils.createToast(
@@ -141,23 +139,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const adminPanelBtn = document.getElementById("goToAdminPanelBtn");
     const catalogBtn = document.getElementById("goToCatalogBtn");
 
+    // Tampilkan tombol yang sesuai berdasarkan role
     if (userRole === "admin") {
       adminPanelBtn.innerHTML =
         '<i class="bi bi-shield-lock me-2"></i>Masuk ke Admin Panel';
     } else {
-      // Untuk pengguna biasa, tombol ini hanya untuk melihat laporan.
       adminPanelBtn.innerHTML =
         '<i class="bi bi-layout-text-sidebar-reverse me-2"></i>Lihat Panel Laporan';
     }
+
     adminPanelBtn.onclick = () => {
       window.location.href = AppConfig.ROUTES.ADMIN;
     };
+
     catalogBtn.onclick = () => {
       window.location.href = AppConfig.ROUTES.CATALOG;
     };
 
+    // Tampilkan modal untuk SEMUA peran
     choiceModal.show();
   }
 });
-
-
