@@ -1014,16 +1014,15 @@
             >
               <div class="admin-page-header">
                 <div>
-                  <h1 class="fw-bold mb-1">Piutang Outlet</h1>
+                  <h2 class="fw-bold mb-1">Piutang Outlet</h2>
                   <p class="text-muted mb-0">
-                    Kelola tagihan dan pembayaran dari outlet
+                    Kelola tagihan dan pembayaran dari outlet.
                   </p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="ms-md-4">
                   <button
                     class="btn btn-primary"
                     id="buatTagihanBtn"
-                    data-type="piutang"
                     data-bs-toggle="modal"
                     data-bs-target="#dateRangeModal"
                   >
@@ -1034,21 +1033,40 @@
 
               <div class="card glass-card mb-4">
                 <div class="card-body">
-                  <div class="input-group">
-                    <span class="input-group-text"
-                      ><i class="bi bi-search"></i
-                    ></span>
+                  <div class="d-flex flex-wrap align-items-center gap-2">
                     <input
                       type="text"
                       class="form-control"
                       id="piutang-search"
-                      placeholder="Cari berdasarkan nama outlet atau ID invoice..."
+                      placeholder="🔍 Cari di semua data histori..."
+                      style="flex: 1 1 250px"
                     />
+                    <select
+                      id="piutang-outlet-filter"
+                      class="form-select"
+                      style="flex: 1 1 180px"
+                    ></select>
+                    <select
+                      id="piutang-month-filter"
+                      class="form-select"
+                      style="flex: 1 1 140px"
+                    ></select>
+                    <select
+                      id="piutang-year-filter"
+                      class="form-select"
+                      style="flex: 1 1 100px"
+                    ></select>
+                    <button
+                      id="piutang-filter-reset"
+                      class="btn btn-outline-secondary"
+                    >
+                      Reset
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <div id="piutang-outlet-container"></div>
+              <div id="piutang-outlet-container" class="mt-4"></div>
             </div>
             <!-- Hutang Vendor Tab -->
             <div
@@ -1059,16 +1077,15 @@
             >
               <div class="admin-page-header">
                 <div>
-                  <h1 class="fw-bold mb-1">Hutang Vendor</h1>
+                  <h2 class="fw-bold mb-1">Hutang Vendor</h2>
                   <p class="text-muted mb-0">
-                    Kelola tagihan dan pembayaran ke vendor
+                    Kelola tagihan dan pembayaran ke vendor.
                   </p>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="ms-md-4">
                   <button
                     class="btn btn-primary"
                     id="buatLaporanVendorBtn"
-                    data-type="hutang"
                     data-bs-toggle="modal"
                     data-bs-target="#dateRangeModal"
                   >
@@ -1076,41 +1093,40 @@
                   </button>
                 </div>
               </div>
-              <div class="row g-3 mb-4" id="hutang-summary-cards"></div>
-              <div id="hutang-search-filter"></div>
-              <!-- Search and Filter -->
-              <div id="hutang-search-filter"></div>
 
-              <!-- Hutang Table with Enhanced ARIA -->
-              <div class="card glass-card">
-                <div class="card-body p-0">
-                  <div
-                    class="table-responsive scrollable-table-container"
-                    aria-live="polite"
-                  >
-                    <table
-                      class="table table-hover mb-0"
-                      role="table"
-                      aria-label="Vendor debts"
+              <div class="card glass-card mb-4">
+                <div class="card-body">
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="hutang-search"
+                      placeholder="🔍 Cari di semua data histori..."
+                      style="flex: 1 1 250px"
+                    />
+                    <select
+                      id="hutang-month-filter"
+                      class="form-select"
+                      style="flex: 1 1 150px"
+                    ></select>
+                    <select
+                      id="hutang-year-filter"
+                      class="form-select"
+                      style="flex: 1 1 120px"
+                    ></select>
+                    <button
+                      id="hutang-filter-reset"
+                      class="btn btn-outline-secondary"
                     >
-                      <thead class="table-light">
-                        <tr>
-                          <th scope="col">No Nota</th>
-                          <th scope="col">Tanggal</th>
-                          <th scope="col">Vendor</th>
-                          <th scope="col" class="text-end">Total</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">Bukti</th>
-                          <th scope="col">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody id="hutang-table-body">
-                        <!-- Data will be loaded here -->
-                      </tbody>
-                    </table>
+                      Reset
+                    </button>
                   </div>
                 </div>
               </div>
+
+              <div class="row g-3 mb-4" id="hutang-summary-cards"></div>
+
+              <div id="hutang-vendor-container"></div>
             </div>
             <!-- Master Produk Tab -->
             <div
@@ -1206,11 +1222,15 @@
                           </th>
                         </tr>
                       </thead>
-                      <tbody id="inventaris-table-body">
-                        <!-- Data will be loaded here -->
-                      </tbody>
+                      <tbody id="inventaris-table-body"></tbody>
                     </table>
                   </div>
+                </div>
+                <div
+                  class="card-footer d-flex justify-content-between align-items-center"
+                >
+                  <div id="pagination-info" class="text-muted small"></div>
+                  <div id="pagination-controls"></div>
                 </div>
               </div>
             </div>
