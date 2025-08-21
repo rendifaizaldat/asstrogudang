@@ -1031,42 +1031,24 @@
                   </button>
                 </div>
               </div>
-              <div class="row g-3 mb-4" id="piutang-summary-cards"></div>
-              <div id="piutang-search-filter"></div>
 
-              <!-- Search and Filter -->
-              <div id="piutang-search-filter"></div>
-
-              <!-- Piutang Table with Enhanced ARIA -->
-              <div class="card glass-card">
-                <div class="card-body p-0">
-                  <div
-                    class="table-responsive scrollable-table-container"
-                    aria-live="polite"
-                  >
-                    <table
-                      class="table table-hover mb-0"
-                      role="table"
-                      aria-label="Outlet receivables"
-                    >
-                      <thead class="table-light">
-                        <tr>
-                          <th scope="col">ID Invoice</th>
-                          <th scope="col">Tanggal</th>
-                          <th scope="col">Outlet</th>
-                          <th scope="col" class="text-end">Total</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">Bukti</th>
-                          <th scope="col">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody id="piutang-table-body">
-                        <!-- Data will be loaded here -->
-                      </tbody>
-                    </table>
+              <div class="card glass-card mb-4">
+                <div class="card-body">
+                  <div class="input-group">
+                    <span class="input-group-text"
+                      ><i class="bi bi-search"></i
+                    ></span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="piutang-search"
+                      placeholder="Cari berdasarkan nama outlet atau ID invoice..."
+                    />
                   </div>
                 </div>
               </div>
+
+              <div id="piutang-outlet-container"></div>
             </div>
             <!-- Hutang Vendor Tab -->
             <div
