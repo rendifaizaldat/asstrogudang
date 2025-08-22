@@ -1,4 +1,4 @@
-const CACHE_NAME = "gudang-bandung-raya-cache-v5";
+const CACHE_NAME = "gudang-bandung-raya-cache-v6";
 const STATIC_CACHE_URLS = [
   // Core App Shell
   "index.html",
@@ -143,7 +143,6 @@ async function syncOfflineRequests() {
         if (response.ok) {
           store.delete(req.id);
         } else {
-          // Jika server menolak (misal, stok habis), hapus dari antrean agar tidak dicoba terus-menerus.
           console.error(
             `Request ${req.id} failed with status ${response.status}. Deleting from queue.`
           );
@@ -162,4 +161,5 @@ async function syncOfflineRequests() {
     console.error("[Service Worker] Sync failed:", error.message);
   }
 }
+
 
