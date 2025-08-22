@@ -1,4 +1,4 @@
-const CACHE_NAME = "gudang-bandung-raya-cache-v6";
+const CACHE_NAME = "gudang-bandung-raya-cache-v7";
 const STATIC_CACHE_URLS = [
   // Core App Shell
   "index.html",
@@ -68,6 +68,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  const url = new URL(request.url);
+  if (url.protocol !== "http:" && url.protocol !== "https-:") {
+    return;
+  }
 
   if (request.method !== "GET" || request.url.includes("supabase.co")) {
     event.respondWith(fetch(request));
@@ -143,6 +147,7 @@ async function syncOfflineRequests() {
         if (response.ok) {
           store.delete(req.id);
         } else {
+          // Jika server menolak (misal, stok habis), hapus dari antrean agar tidak dicoba terus-menerus.
           console.error(
             `Request ${req.id} failed with status ${response.status}. Deleting from queue.`
           );
@@ -161,5 +166,3 @@ async function syncOfflineRequests() {
     console.error("[Service Worker] Sync failed:", error.message);
   }
 }
-
-
