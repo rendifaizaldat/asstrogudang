@@ -1,7 +1,4 @@
-// config.js - Refactored with static properties and methods for consistency
-
 export class AppConfig {
-  // --- KONFIGURASI BARU UNTUK SUPABASE ---
   static SUPABASE_URL = "https://wgtzyblrvlemzhphujjp.supabase.co"; // <-- GANTI DENGAN URL PROYEK ANDA
   static SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndndHp5YmxydmxlbXpocGh1ampwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MjMyODksImV4cCI6MjA3MDE5OTI4OX0.g1OhVX8Qjjlgd0gA1TexWjbuADtnCSOkHakLR2Vof3A"; // <-- GANTI DENGAN KUNCI ANON ANDA
@@ -80,4 +77,5 @@ export class AppConfig {
 
 // Panggil metode init statis secara langsung
 AppConfig.init();
+
 
