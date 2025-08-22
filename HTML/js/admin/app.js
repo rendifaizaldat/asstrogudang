@@ -1,3 +1,5 @@
+// HTML/js/admin/app.js
+
 import { supabase } from "../utils.js";
 import { AppConfig } from "../config.js";
 import {
@@ -523,6 +525,32 @@ class AdminController {
     document
       .getElementById("hutang-search")
       ?.addEventListener("input", debouncedHutangSearch);
+    if (this.elements.barangSearchInput) {
+      this.elements.barangSearchInput.addEventListener(
+        "item-selected-by-enter",
+        () => {
+          this.elements.itemQty.focus();
+        }
+      );
+    }
+
+    if (this.elements.itemQty) {
+      this.elements.itemQty.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.elements.itemHarga.focus(); // Pindah ke input harga
+        }
+      });
+    }
+
+    if (this.elements.itemHarga) {
+      this.elements.itemHarga.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.elements.addItemBtn.click(); // Klik tombol tambah item
+        }
+      });
+    }
   }
 
   handleStateUpdate(event, data) {
