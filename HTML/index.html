@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Outlet - Warehouse Management</title>
+    <meta
+      name="description"
+      content="Login ke sistem manajemen gudang untuk outlet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- PWA Meta tags -->
+    <meta name="theme-color" content="#6366f1" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+  </head>
+  <body class="d-flex align-items-center justify-content-center min-vh-100">
+    <!-- Background Pattern -->
+    <div
+      class="position-fixed w-100 h-100"
+      style="top: 0; left: 0; z-index: -1; opacity: 0.1"
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <pattern
+            id="grid"
+            width="10"
+            height="10"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 10 0 L 0 0 0 10"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+    </div>
+
+    <div class="login-container">
+      <div class="glass-card text-center">
+        <!-- Logo Section -->
+        <div class="mb-4">
+          <img
+            src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=180,fit=crop,q=95/ALpeWM5b1Js3G9vP/logo-asstro-hires-mjE7bw10LXFGo53w.png"
+            alt="Logo"
+            class="mb-3 rounded-circle shadow-sm"
+            style="width: 80px; height: 80px; object-fit: cover"
+            loading="eager"
+          />
+          <h4 class="fw-bold mb-2" id="form-title">Login Outlet</h4>
+          <p class="text-muted mb-0" id="form-subtitle">
+            Masukkan detail akun Anda
+          </p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+          <div class="mb-3">
+            <label class="form-label">Email atau Nama Outlet</label>
+            <input
+              type="text"
+              class="form-control"
+              id="loginID"
+              required
+              placeholder="contoh@email.com"
+              autocomplete="username"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <div class="position-relative">
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                required
+                placeholder="••••••••"
+                autocomplete="current-password"
+              />
+              <button
+                type="button"
+                class="btn btn-link position-absolute end-0 top-50 translate-middle-y pe-3"
+                id="showPassword"
+                tabindex="-1"
+              >
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-3 d-flex justify-content-between align-items-center">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe" />
+              <label class="form-check-label small" for="rememberMe">
+                Ingat saya
+              </label>
+            </div>
+            <a href="#" class="small text-decoration-none" id="forgotPassword">
+              Lupa password?
+            </a>
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-outline-primary w-100 py-3 fw-bold mb-3"
+            id="loginButton"
+          >
+            <i class="bi bi-box-arrow-in-right me-2"></i>
+            Login
+          </button>
+          <p class="text-center mt-4 small">
+            Belum punya akun?
+            <a href="#" id="showSignup" class="text-decoration-none fw-bold"
+              >Daftar di sini</a
+            >
+          </p>
+        </form>
+
+        <!-- Signup Form (Hidden) -->
+        <form id="signupForm" style="display: none" novalidate>
+          <div class="mb-3">
+            <label class="form-label">Nama Outlet</label>
+            <input
+              type="text"
+              class="form-control"
+              id="signup_nama"
+              required
+              placeholder="Contoh: Outlet Bandung"
+            />
+            <div class="invalid-feedback">Nama outlet wajib diisi.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email Outlet</label>
+            <input
+              type="email"
+              class="form-control"
+              id="signup_email"
+              required
+              placeholder="outlet.bandung@email.com"
+            />
+            <div class="invalid-feedback">Format email tidak valid.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password Baru</label>
+            <input
+              type="password"
+              class="form-control"
+              id="signup_password"
+              required
+              placeholder="••••••••"
+            />
+            <div class="invalid-feedback">Password minimal 6 karakter.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Konfirmasi Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="signup_confirm_password"
+              required
+              placeholder="••••••••"
+            />
+            <div class="invalid-feedback">Password tidak cocok.</div>
+          </div>
+          <button
+            type="submit"
+            id="signupButton"
+            class="btn btn-success w-100 py-3 fw-bold mb-3"
+          >
+            <i class="bi bi-person-plus-fill me-2"></i>
+            Daftarkan Akun
+          </button>
+
+          <p class="text-center mt-3 small">
+            Sudah punya akun?
+            <a href="#" id="showLogin" class="text-decoration-none"
+              >Login di sini</a
+            >
+          </p>
+        </form>
+
+        <!-- Security Notice -->
+        <div class="mt-4 pt-3 border-top">
+          <small class="text-muted">
+            <i class="bi bi-shield-check me-1"></i>
+            Koneksi Sertifikat SSL/TLS
+          </small>
+        </div>
+      </div>
+
+      <!-- Version Info -->
+      <div class="text-center mt-3">
+        <small class="text-muted">
+          Version 2.0 | &copy; 2025 System By Rendi Faizal Dat
+        </small>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div
+      class="toast-container position-fixed top-0 end-0 p-3"
+      style="z-index: 9999"
+    ></div>
+
+    <!-- Loading Overlay -->
+    <div
+      id="loadingOverlay"
+      class="position-fixed top-0 start-0 w-100 h-100 d-none"
+      style="background: rgba(0, 0, 0, 0.5); z-index: 9998"
+    >
+      <div class="d-flex justify-content-center align-items-center h-100">
+        <div class="text-center text-white">
+          <div
+            class="spinner-border mb-3"
+            style="width: 3rem; height: 3rem"
+          ></div>
+          <div>Memproses login...</div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="adminChoiceModal"
+      tabindex="-1"
+      aria-labelledby="adminChoiceModalLabel"
+      aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card">
+          <div class="modal-header">
+            <h5 class="modal-title" id="adminChoiceModalLabel">
+              Login Admin Berhasil
+            </h5>
+          </div>
+          <div class="modal-body text-center">
+            <p>Anda login sebagai Admin. Silakan pilih tujuan Anda:</p>
+            <div class="d-grid gap-2">
+              <button id="goToAdminPanelBtn" class="btn btn-primary">
+                <i class="bi bi-shield-lock me-2"></i>Masuk ke Admin Panel
+              </button>
+              <button id="goToCatalogBtn" class="btn btn-outline-secondary">
+                <i class="bi bi-shop me-2"></i>Masuk ke Katalog
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/config.js"></script>
+    <script type="module" src="js/utils.js"></script>
+    <script type="module" src="js/auth.js"></script>
+  </body>
+</html>
