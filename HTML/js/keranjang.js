@@ -543,7 +543,7 @@ class CheckoutManager {
       if (!user)
         throw new Error("Sesi pengguna tidak ditemukan. Silakan login ulang.");
       const payload = {
-        action: "process-checkout",
+        action: "create_receivable_from_cart",
         cart_items: Array.from(this.state.items.values()).map((item) => ({
           id: item.id,
           qty: item.qty,
