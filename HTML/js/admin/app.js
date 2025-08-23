@@ -934,6 +934,7 @@ class AdminController {
         this.populateOutletSelect();
         break;
       case "#barang-masuk":
+        this.renderer.renderVendorOptions(this.state.getData("vendors")); // TAMBAHKAN BARIS INI
         this.setupBarangAutocomplete(this.state.getData("inventaris"));
         break;
       case "#retur-barang":
