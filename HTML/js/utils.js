@@ -263,7 +263,7 @@ export class UIUtils {
       element.style.opacity = 1;
     }
   }
-  static showConfirmationModal(message, onConfirm) {
+  static showConfirmationModal(message, onConfirm, onCancel = null) {
     const modalEl = document.getElementById("confirmationModal");
     if (!modalEl) {
       console.error(
@@ -274,20 +274,34 @@ export class UIUtils {
 
     const messageEl = document.getElementById("confirmationModalMessage");
     const confirmBtn = document.getElementById("confirmationModalConfirmBtn");
+    const cancelBtn = document.getElementById("confirmationModalCancelBtn");
+    const modalInstance = new bootstrap.Modal(modalEl);
 
     messageEl.textContent = message;
 
+    // Menggunakan .cloneNode dan .replaceWith untuk menghapus listener lama dengan aman
     const newConfirmBtn = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
 
-    newConfirmBtn.addEventListener("click", () => {
-      onConfirm();
-      bootstrap.Modal.getInstance(modalEl).hide();
-    });
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
 
-    // Tampilkan modal menggunakan API Bootstrap
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
+    const confirmHandler = () => {
+      onConfirm();
+      modalInstance.hide();
+    };
+
+    newConfirmBtn.addEventListener("click", confirmHandler, { once: true });
+
+    if (onCancel) {
+      const cancelHandler = () => {
+        onCancel();
+        modalInstance.hide();
+      };
+      newCancelBtn.addEventListener("click", cancelHandler, { once: true });
+    }
+
+    modalInstance.show();
   }
 }
 
