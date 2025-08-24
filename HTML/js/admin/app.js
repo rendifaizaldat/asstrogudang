@@ -41,6 +41,7 @@ class AdminController {
       searchTerm: "",
     };
     this.returBarangAutocomplete = null;
+    this.editTransactionAutocomplete = null;
   }
 
   async init() {
@@ -51,6 +52,7 @@ class AdminController {
       this.bindElements();
       this.setupEventListeners();
       await this.loadInitialData();
+      this.handleResumeNotaSession();
       const defaultFilterButton = document.querySelector(
         '#date-range-presets .btn[data-range="30"]'
       );
@@ -234,8 +236,15 @@ class AdminController {
     });
 
     document
-      .getElementById("editTransactionForm")
-      ?.addEventListener("submit", (e) => this.handleUpdateTransaction(e));
+      .getElementById("saveTransactionChangesBtn")
+      ?.addEventListener("click", () => this.handleUpdateTransaction());
+
+    document
+      .getElementById("formAddItemToTransaction")
+      ?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.handleAddItemToTransaction();
+      });
 
     document
       .getElementById("editTransactionItemsBody")
@@ -812,7 +821,7 @@ class AdminController {
     }
   }
 
-  handleStartNotaSession() {
+  async handleStartNotaSession() {
     const sessionData = {
       vendor: this.elements.vendorSelect.value,
       noNota: this.elements.noNotaInput.value,
@@ -820,7 +829,26 @@ class AdminController {
       tanggalJatuhTempo: this.elements.tanggalJatuhTempoInput.value,
     };
 
+    const startButton = this.elements.startNotaSessionBtn;
+    UIUtils.setLoadingState(startButton, true, "Memvalidasi...");
+
     try {
+      const { data: validation, error: validationError } = await APIClient.post(
+        "validate-invoice",
+        {
+          noNota: sessionData.noNota,
+          vendor: sessionData.vendor,
+        }
+      );
+
+      if (validationError) throw validationError;
+
+      if (validation.exists) {
+        throw new Error(
+          `Nota "${sessionData.noNota}" dari ${sessionData.vendor} sudah ada.`
+        );
+      }
+
       this.state.startNotaSession(
         sessionData.vendor,
         sessionData.noNota,
@@ -841,6 +869,8 @@ class AdminController {
     } catch (error) {
       Logger.error("Gagal memulai sesi nota", error);
       UIUtils.createToast("error", error.message);
+    } finally {
+      UIUtils.setLoadingState(startButton, false); // Kembalikan state tombol
     }
   }
 
@@ -1399,6 +1429,25 @@ class AdminController {
     const modalEl = document.getElementById("editTransactionModal");
     if (!modalEl) return;
 
+    // Inisialisasi Autocomplete jika belum ada
+    if (!this.editTransactionAutocomplete) {
+      this.editTransactionAutocomplete = new AutocompleteInput(
+        "editItemSearch",
+        "editItemAutocompleteResults",
+        this.state.getData("inventaris")
+      );
+
+      // Tambahkan event listener untuk mengisi harga otomatis
+      document
+        .getElementById("editItemSearch")
+        .addEventListener("item-selected", (e) => {
+          const selectedProduct = e.detail;
+          if (selectedProduct) {
+            document.getElementById("editItemQty").focus();
+          }
+        });
+    }
+
     const modal = new bootstrap.Modal(modalEl);
     const title = document.getElementById("editTransactionModalLabel");
     const itemsBody = document.getElementById("editTransactionItemsBody");
@@ -1441,28 +1490,8 @@ class AdminController {
           .split("T")[0];
       }
 
-      // Render rincian item
       itemsBody.innerHTML = items
-        .map(
-          (item) => `
-    <tr data-item-id="${item.product_id}">
-      <td>${item.products.nama}</td>
-
-      <td><input type="text" inputmode="decimal" class="form-control form-control-sm edit-item-input" data-field="quantity" value="${String(
-        item.quantity
-      ).replace(".", ",")}"></td>
-      <td><input type="text" inputmode="decimal" class="form-control form-control-sm edit-item-input" data-field="price" value="${String(
-        item.price_per_unit
-      ).replace(".", ",")}"></td>
-      <td class="text-end subtotal">${CurrencyFormatter.format(
-        item.subtotal
-      )}</td>
-      <td class="text-center">
-        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item"><i class="bi bi-trash"></i></button>
-      </td>
-    </tr>
-  `
-        )
+        .map((item) => this.createEditTransactionItemRow(item))
         .join("");
 
       this.updateEditModalTotal();
@@ -1558,10 +1587,7 @@ class AdminController {
       UIUtils.createToast("error", err.message || "Gagal membuka nota.");
     }
   }
-  async handleUpdateTransaction(event) {
-    event.preventDefault();
-
-    const form = event.target;
+  async handleUpdateTransaction() {
     const submitBtn = document.getElementById("saveTransactionChangesBtn");
     UIUtils.setLoadingState(submitBtn, true, "Menyimpan...");
 
@@ -1595,6 +1621,7 @@ class AdminController {
             price_per_unit: parseFloat(priceValue),
           });
         });
+
       const payload = {
         action: "update-full-transaction",
         transactionId: parseInt(transactionId, 10),
@@ -1602,11 +1629,16 @@ class AdminController {
         newHeaderData: newHeaderData,
         newItems: newItems,
       };
+
       const { error } = await APIClient.put("manage-transactions", payload);
       if (error) throw error;
 
       UIUtils.createToast("success", "Transaksi berhasil diperbarui.");
-      bootstrap.Modal.getInstance(form.closest(".modal")).hide();
+      const modalEl = document.getElementById("editTransactionModal");
+      if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+      }
 
       await this.loadInitialData();
     } catch (err) {
@@ -2643,6 +2675,108 @@ class AdminController {
     }
   }
   // **** END: RETURN CONTROLLER METHODS ****
+  createEditTransactionItemRow(item) {
+    return `
+    <tr data-item-id="${item.product_id}">
+      <td>${item.products.nama}</td>
+      <td><input type="text" inputmode="decimal" class="form-control form-control-sm edit-item-input" data-field="quantity" value="${String(
+        item.quantity
+      ).replace(".", ",")}"></td>
+      <td><input type="text" inputmode="decimal" class="form-control form-control-sm edit-item-input" data-field="price" value="${String(
+        item.price_per_unit
+      ).replace(".", ",")}"></td>
+      <td class="text-end subtotal">${CurrencyFormatter.format(
+        item.subtotal
+      )}</td>
+      <td class="text-center">
+        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>`;
+  }
+
+  handleAddItemToTransaction() {
+    const selectedProduct = this.editTransactionAutocomplete.getSelectedItem();
+    if (!selectedProduct) {
+      UIUtils.createToast(
+        "warning",
+        "Pilih produk dari daftar terlebih dahulu."
+      );
+      return;
+    }
+
+    const qty = parseFloat(
+      document.getElementById("editItemQty").value.replace(",", ".")
+    );
+    const transactionType = document.getElementById(
+      "editTransactionType"
+    ).value;
+    const price =
+      transactionType === "piutang"
+        ? selectedProduct.harga_jual
+        : selectedProduct.harga_beli;
+
+    if (isNaN(qty) || qty <= 0) {
+      UIUtils.createToast(
+        "error",
+        "Kuantitas harus diisi dengan angka yang valid."
+      );
+      return;
+    }
+
+    const itemsBody = document.getElementById("editTransactionItemsBody");
+
+    // Cek jika item sudah ada, update kuantitasnya
+    const existingRow = itemsBody.querySelector(
+      `tr[data-item-id="${selectedProduct.id}"]`
+    );
+    if (existingRow) {
+      const qtyInput = existingRow.querySelector(
+        'input[data-field="quantity"]'
+      );
+      const currentQty = parseFloat(qtyInput.value.replace(",", ".")) || 0;
+      qtyInput.value = String(currentQty + qty).replace(".", ",");
+    } else {
+      // Jika belum ada, tambahkan baris baru
+      const newItemData = {
+        product_id: selectedProduct.id,
+        products: { nama: selectedProduct.nama, unit: selectedProduct.unit },
+        quantity: qty,
+        price_per_unit: price,
+        subtotal: qty * price,
+      };
+      itemsBody.insertAdjacentHTML(
+        "beforeend",
+        this.createEditTransactionItemRow(newItemData)
+      );
+    }
+
+    this.updateEditModalTotal();
+    document.getElementById("formAddItemToTransaction").reset();
+    this.editTransactionAutocomplete.clear();
+    document.getElementById("editItemSearch").focus();
+  }
+  handleResumeNotaSession() {
+    if (this.state.loadNotaSessionFromStorage()) {
+      const session = this.state.getCurrentNotaSession();
+      // Gunakan konfirmasi modal yang ada
+      UIUtils.showConfirmationModal(
+        `Ada sesi input barang yang belum selesai untuk nota "${session.noNota}" dari vendor "${session.vendor}". Apakah Anda ingin melanjutkannya?`,
+        () => {
+          // Jika user klik "Ya, Lanjutkan"
+          this.navigationManager.navigateToTab("#barang-masuk");
+          this.toggleNotaForm(false);
+          this.toggleItemForm(true);
+          this.renderer.renderBarangMasukPreview();
+          UIUtils.createToast("info", "Sesi sebelumnya berhasil dilanjutkan.");
+        },
+        () => {
+          // Jika user klik "Batal"
+          this.state.clearBarangMasuk();
+          UIUtils.createToast("warning", "Sesi sebelumnya telah dibatalkan.");
+        }
+      );
+    }
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
