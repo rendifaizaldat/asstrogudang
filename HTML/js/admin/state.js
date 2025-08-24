@@ -78,6 +78,8 @@ class AdminState {
       purchaseOrderList: [],
       returnList: [],
     };
+    this.notaSessionKey = "admin_nota_session";
+    this.notaItemsKey = "admin_nota_items";
     this.user = null;
     this.isOffline = !navigator.onLine;
     this.listeners = new Set();
@@ -249,6 +251,14 @@ class AdminState {
       tanggalJatuhTempo,
       startTime: Date.now(),
     };
+
+    // Simpan sesi dan item kosong ke localStorage
+    localStorage.setItem(
+      this.notaSessionKey,
+      JSON.stringify(this.currentNotaSession)
+    );
+    localStorage.setItem(this.notaItemsKey, JSON.stringify([]));
+
     this.analytics.recordActivity(
       "nota_session_started",
       this.currentNotaSession
@@ -315,6 +325,10 @@ class AdminState {
     };
 
     this.data.barangMasukList.push(finalItem);
+    localStorage.setItem(
+      this.notaItemsKey,
+      JSON.stringify(this.data.barangMasukList)
+    );
     this.analytics.recordActivity("barang_masuk_added", finalItem);
     this.notifyListeners("barang-masuk-added", { item: finalItem });
     return { status: "added" };
@@ -343,6 +357,10 @@ class AdminState {
   removeBarangMasuk(index) {
     if (index >= 0 && index < this.data.barangMasukList.length) {
       const removed = this.data.barangMasukList.splice(index, 1)[0];
+      localStorage.setItem(
+        this.notaItemsKey,
+        JSON.stringify(this.data.barangMasukList)
+      );
       this.analytics.recordActivity("barang_masuk_removed", removed);
       this.notifyListeners("barang-masuk-removed", { index, item: removed });
       return true;
@@ -379,6 +397,10 @@ class AdminState {
         lastModified: new Date().toISOString(),
       });
 
+      localStorage.setItem(
+        this.notaItemsKey,
+        JSON.stringify(this.data.barangMasukList)
+      );
       this.analytics.recordActivity("barang_masuk_updated", { index, updates });
       this.notifyListeners("barang-masuk-updated", { index, item });
       return true;
@@ -389,7 +411,10 @@ class AdminState {
   clearBarangMasuk() {
     const count = this.data.barangMasukList.length;
     this.data.barangMasukList = [];
-    this.endNotaSession();
+    this.currentNotaSession = null;
+    localStorage.removeItem(this.notaSessionKey);
+    localStorage.removeItem(this.notaItemsKey);
+
     this.analytics.recordActivity("barang_masuk_cleared", { count });
     this.notifyListeners("barang-masuk-cleared");
   }
@@ -855,6 +880,21 @@ class AdminState {
       },
       { lunas: 0, belumLunas: 0, total: 0 }
     );
+  }
+  loadNotaSessionFromStorage() {
+    const session = localStorage.getItem(this.notaSessionKey);
+    const items = localStorage.getItem(this.notaItemsKey);
+
+    if (session && items) {
+      this.currentNotaSession = JSON.parse(session);
+      this.data.barangMasukList = JSON.parse(items);
+      console.log(
+        "Sesi nota yang belum selesai ditemukan dan dimuat.",
+        this.currentNotaSession
+      );
+      return true;
+    }
+    return false;
   }
 }
 
