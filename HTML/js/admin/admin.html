@@ -2261,7 +2261,7 @@
             ></button>
           </div>
           <div class="modal-body">
-            <form id="editTransactionForm">
+            <form id="editTransactionForm" onsubmit="return false;">
               <input type="hidden" id="editTransactionId" />
               <input type="hidden" id="editTransactionType" />
 
@@ -2295,31 +2295,73 @@
                   />
                 </div>
               </div>
-              <hr />
-              <h6 class="mb-3">Rincian Item</h6>
-              <div class="table-responsive scrollable-table-container">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>Produk</th>
-                      <th style="width: 120px">Qty</th>
-                      <th style="width: 150px">Harga Satuan</th>
-                      <th class="text-end">Subtotal</th>
-                      <th class="text-center">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody id="editTransactionItemsBody"></tbody>
-                </table>
+            </form>
+            <hr />
+
+            <h6 class="mb-3">Tambah Item Baru</h6>
+            <form id="formAddItemToTransaction">
+              <div class="row g-2 align-items-end">
+                <div class="col-md-7">
+                  <label for="editItemSearch" class="form-label small"
+                    >Cari Produk</label
+                  >
+                  <div class="position-relative">
+                    <input
+                      type="text"
+                      class="form-control form-control-sm"
+                      id="editItemSearch"
+                      placeholder="Ketik nama produk..."
+                      autocomplete="off"
+                    />
+                    <div
+                      class="autocomplete-results"
+                      id="editItemAutocompleteResults"
+                    ></div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label for="editItemQty" class="form-label small">Qty</label>
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="editItemQty"
+                    min="0.01"
+                    step="any"
+                  />
+                </div>
+                <div class="col-md-2">
+                  <button type="submit" class="btn btn-sm btn-primary w-100">
+                    Tambah
+                  </button>
+                </div>
               </div>
             </form>
+
+            <hr />
+
+            <h6 class="mb-3">Rincian Item Saat Ini</h6>
+            <div class="table-responsive" style="max-height: 250px">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Produk</th>
+                    <th style="width: 120px">Qty</th>
+                    <th style="width: 150px">Harga Satuan</th>
+                    <th class="text-end">Subtotal</th>
+                    <th class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="editTransactionItemsBody"></tbody>
+              </table>
+            </div>
           </div>
           <div class="modal-footer justify-content-between">
             <strong class="fs-5"
               >Total Baru:
               <span id="editTransactionNewTotal" class="text-primary"
                 >Rp 0</span
-              ></strong
-            >
+              >
+            </strong>
             <div>
               <button
                 type="button"
@@ -2329,8 +2371,7 @@
                 Batal
               </button>
               <button
-                type="submit"
-                form="editTransactionForm"
+                type="button"
                 class="btn btn-primary"
                 id="saveTransactionChangesBtn"
               >
