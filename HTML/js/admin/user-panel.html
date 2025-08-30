@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Panel - Warehouse Management</title>
+    <meta
+      name="description"
+      content="Panel pengguna untuk manajemen pesanan dan tagihan."
+    />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta
+      http-equiv="Referrer-Policy"
+      content="strict-origin-when-cross-origin"
+    />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/style.css" />
+  </head>
+  <body class="bg-light">
+    <div class="admin-layout">
+      <div class="admin-container">
+        <nav id="sidebar" class="admin-sidebar d-none d-lg-flex">
+          <div class="admin-header">
+            <div class="admin-logo-container">
+              <div class="admin-logo">
+                <i class="bi bi-person-workspace text-white"></i>
+              </div>
+              <div class="admin-title">
+                <div class="fw-bold">User Panel</div>
+                <small class="text-muted">Order Management</small>
+              </div>
+            </div>
+          </div>
+          <hr />
+          <ul
+            class="nav nav-pills flex-column mb-auto admin-nav"
+            id="admin-nav"
+            role="tablist"
+          >
+            <li class="nav-item mb-1" role="presentation">
+              <button
+                class="nav-link w-100 text-start"
+                id="piutang-outlet-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#piutang-outlet"
+                type="button"
+                role="tab"
+                aria-selected="true"
+              >
+                <i class="bi bi-receipt me-2"></i>Tagihan Saya
+              </button>
+            </li>
+            <li class="mb-1" role="presentation">
+              <button
+                class="nav-link w-100 text-start"
+                id="purchase-order-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#purchase-order"
+                type="button"
+                role="tab"
+                aria-selected="false"
+              >
+                <i class="bi bi-cart-plus me-2"></i>Purchase Order
+              </button>
+            </li>
+            <li class="mb-1" role="presentation">
+              <button
+                class="nav-link w-100 text-start"
+                id="retur-barang-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#retur-barang"
+                type="button"
+                role="tab"
+                aria-selected="false"
+              >
+                <i class="bi bi-arrow-return-left me-2"></i>Retur Barang
+              </button>
+            </li>
+          </ul>
+          <hr />
+          <div class="dropdown">
+            <button
+              class="admin-user-button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <div class="admin-user-avatar">
+                <i class="bi bi-person-fill text-white"></i>
+              </div>
+              <strong id="admin-greeting">Pengguna</strong>
+            </button>
+            <ul class="dropdown-menu text-small shadow">
+              <li>
+                <a class="dropdown-item" href="../../katalog.html">
+                  <i class="bi bi-arrow-left-circle me-2"></i>Kembali ke Katalog
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <main id="main-content" class="admin-main-content" role="main">
+          <div class="admin-mobile-header d-lg-none">
+            <h5 class="mb-0">User Panel</h5>
+            <button
+              class="btn btn-outline-primary"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#mobileSidebar"
+              aria-controls="mobileSidebar"
+            >
+              <i class="bi bi-list"></i>
+            </button>
+          </div>
+
+          <div id="loader" class="admin-loader">
+            <div class="text-center">
+              <div class="spinner-border text-primary mb-3 admin-spinner"></div>
+              <p class="text-muted">Memuat data...</p>
+            </div>
+          </div>
+
+          <div id="main-content-tabs" class="d-none tab-content">
+            <div
+              class="tab-pane fade"
+              id="piutang-outlet"
+              role="tabpanel"
+              aria-labelledby="piutang-outlet-tab"
+            >
+              <div class="admin-page-header">
+                <div>
+                  <h1 class="fw-bold mb-1">Tagihan Saya</h1>
+                  <p class="text-muted mb-0">
+                    Lihat riwayat tagihan dan status pembayaran Anda.
+                  </p>
+                </div>
+              </div>
+              <div id="piutang-outlet-container" class="mt-4"></div>
+            </div>
+
+            <div
+              class="tab-pane fade"
+              id="purchase-order"
+              role="tabpanel"
+              aria-labelledby="purchase-order-tab"
+            >
+              <div class="admin-page-header">
+                <div>
+                  <h1 class="fw-bold mb-1">Input Purchase Order (PO)</h1>
+                  <p class="text-muted mb-0">
+                    Buat pesanan barang untuk outlet Anda.
+                  </p>
+                </div>
+              </div>
+              <div id="po-session-info"></div>
+              <div class="row g-4">
+                <div class="col-lg-5">
+                  <div class="card glass-card">
+                    <div class="card-header">
+                      <h2 class="h6 mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>Detail
+                        Pesanan
+                      </h2>
+                    </div>
+                    <div class="card-body">
+                      <form id="formPODetail">
+                        <div class="mb-3">
+                          <label for="poOutletSelect" class="form-label"
+                            >Outlet</label
+                          >
+                          <select
+                            class="form-select"
+                            id="poOutletSelect"
+                            required
+                            disabled
+                          >
+                            <option>Otomatis</option>
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label for="poTanggalKirim" class="form-label"
+                            >Tanggal Pengiriman
+                            <span class="text-danger">*</span></label
+                          >
+                          <input
+                            type="date"
+                            class="form-control"
+                            id="poTanggalKirim"
+                            required
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          class="btn btn-success w-100"
+                          id="startPOSessionBtn"
+                        >
+                          <i class="bi bi-play-circle me-1"></i>Mulai Input Item
+                        </button>
+                      </form>
+                      <hr />
+                      <h3 class="h6 mb-3">
+                        <i class="bi bi-box-seam me-2"></i>Item Pesanan
+                      </h3>
+                      <form id="formTambahPOItem">
+                        <div class="mb-3 position-relative">
+                          <label for="poBarangSearchInput" class="form-label"
+                            >Nama Barang
+                            <span class="text-danger">*</span></label
+                          >
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="poBarangSearchInput"
+                            placeholder="Ketik untuk mencari produk..."
+                            required
+                            disabled
+                            autocomplete="off"
+                          />
+                          <div
+                            class="autocomplete-results"
+                            id="poBarangAutocompleteResults"
+                          ></div>
+                        </div>
+                        <div class="mb-3">
+                          <label for="poItemQty" class="form-label"
+                            >Qty <span class="text-danger">*</span></label
+                          >
+                          <input
+                            type="number"
+                            class="form-control"
+                            id="poItemQty"
+                            required
+                            min="0.01"
+                            step="any"
+                            max="999999"
+                            disabled
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          class="btn btn-primary w-100 mt-3"
+                          disabled
+                          id="addPOItemBtn"
+                        >
+                          <i class="bi bi-plus-circle me-1"></i>Tambah Item
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-7">
+                  <div class="card glass-card">
+                    <div class="admin-card-header">
+                      <h2 class="h6 mb-0">
+                        <i class="bi bi-list-check me-2"></i>Daftar Pesanan
+                        (Preview)
+                      </h2>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        id="hapusSemuaPOBtn"
+                        disabled
+                      >
+                        <i class="bi bi-trash me-1"></i>Hapus Semua
+                      </button>
+                    </div>
+                    <div class="card-body p-0">
+                      <div class="table-responsive scrollable-table-container">
+                        <table class="table table-hover mb-0">
+                          <thead class="table-light">
+                            <tr>
+                              <th>Info Barang</th>
+                              <th class="text-center">Qty</th>
+                              <th class="text-end">Harga Jual</th>
+                              <th class="text-end">Subtotal</th>
+                              <th class="text-center">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tabelPOPreview"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div class="card-footer">
+                      <div id="po-total" class="mb-3"></div>
+                      <button
+                        class="btn btn-success w-100 btn-lg"
+                        id="simpanPOBtn"
+                        disabled
+                      >
+                        <i class="bi bi-send-check me-2"></i>Simpan Purchase
+                        Order
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="tab-pane fade"
+              id="retur-barang"
+              role="tabpanel"
+              aria-labelledby="retur-barang-tab"
+            >
+              <div class="admin-page-header">
+                <div>
+                  <h1 class="fw-bold mb-1">Input Retur Barang</h1>
+                  <p class="text-muted mb-0">
+                    Catat pengembalian barang dari outlet Anda.
+                  </p>
+                </div>
+              </div>
+              <div class="row g-4">
+                <div class="col-lg-5">
+                  <div class="card glass-card">
+                    <div class="card-header">
+                      <h2 class="h6 mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>Detail Retur
+                      </h2>
+                    </div>
+                    <div class="card-body">
+                      <form id="formReturHeader">
+                        <div class="mb-3">
+                          <label for="returTanggal" class="form-label"
+                            >Tanggal Retur
+                            <span class="text-danger">*</span></label
+                          >
+                          <input
+                            type="date"
+                            class="form-control"
+                            id="returTanggal"
+                            required
+                          />
+                        </div>
+                        <div class="mb-3">
+                          <label for="returCatatan" class="form-label"
+                            >Catatan (Opsional)</label
+                          >
+                          <textarea
+                            class="form-control"
+                            id="returCatatan"
+                            rows="2"
+                          ></textarea>
+                        </div>
+                        <button
+                          type="button"
+                          class="btn btn-success w-100"
+                          id="startReturSessionBtn"
+                        >
+                          <i class="bi bi-play-circle me-1"></i>Mulai Input
+                          Barang Retur
+                        </button>
+                      </form>
+                      <hr />
+                      <h3 class="h6 mb-3">
+                        <i class="bi bi-box-seam me-2"></i>Item yang Diretur
+                      </h3>
+                      <form id="formTambahReturItem">
+                        <div class="mb-3 position-relative">
+                          <label for="returBarangSearchInput" class="form-label"
+                            >Nama Barang
+                            <span class="text-danger">*</span></label
+                          >
+                          <input
+                            type="text"
+                            class="form-control"
+                            id="returBarangSearchInput"
+                            placeholder="Ketik untuk mencari produk..."
+                            required
+                            disabled
+                            autocomplete="off"
+                          />
+                          <div
+                            class="autocomplete-results"
+                            id="returBarangAutocompleteResults"
+                          ></div>
+                        </div>
+                        <div class="mb-3">
+                          <label for="returItemQty" class="form-label"
+                            >Jumlah Retur
+                            <span class="text-danger">*</span></label
+                          >
+                          <input
+                            type="number"
+                            class="form-control"
+                            id="returItemQty"
+                            required
+                            min="1"
+                            step="any"
+                            disabled
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          class="btn btn-primary w-100 mt-3"
+                          disabled
+                          id="addReturItemBtn"
+                        >
+                          <i class="bi bi-plus-circle me-1"></i>Tambah Item
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-lg-7">
+                  <div class="card glass-card">
+                    <div class="admin-card-header">
+                      <h2 class="h6 mb-0">
+                        <i class="bi bi-list-check me-2"></i>Daftar Barang Retur
+                        (Preview)
+                      </h2>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        id="hapusSemuaReturBtn"
+                        disabled
+                      >
+                        <i class="bi bi-trash me-1"></i>Hapus Semua
+                      </button>
+                    </div>
+                    <div class="card-body p-0">
+                      <div class="table-responsive scrollable-table-container">
+                        <table class="table table-hover mb-0">
+                          <thead class="table-light">
+                            <tr>
+                              <th>Info Barang</th>
+                              <th class="text-center">Qty</th>
+                              <th class="text-end">Harga Satuan</th>
+                              <th class="text-end">Subtotal</th>
+                              <th class="text-center">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody id="tabelReturPreview">
+                            <tr>
+                              <td
+                                colspan="5"
+                                class="text-center py-4 text-muted"
+                              >
+                                Mulai sesi retur untuk menambah item.
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div class="card-footer">
+                      <div id="retur-total" class="mb-3"></div>
+                      <button
+                        class="btn btn-success w-100 btn-lg"
+                        id="simpanReturBtn"
+                        disabled
+                      >
+                        <i class="bi bi-send-check me-2"></i>Simpan Data Retur
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div
+      class="offcanvas offcanvas-start"
+      tabindex="-1"
+      id="mobileSidebar"
+      aria-labelledby="mobileSidebarLabel"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu Navigasi</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        <ul
+          class="nav nav-pills flex-column mb-auto admin-nav"
+          id="admin-nav-mobile"
+          role="tablist"
+        >
+          <li class="nav-item mb-1" role="presentation">
+            <button
+              class="nav-link w-100 text-start"
+              data-bs-toggle="tab"
+              data-bs-target="#piutang-outlet"
+              type="button"
+              role="tab"
+              aria-selected="true"
+            >
+              <i class="bi bi-receipt me-2"></i>Tagihan Saya
+            </button>
+          </li>
+          <li class="mb-1" role="presentation">
+            <button
+              class="nav-link w-100 text-start"
+              data-bs-toggle="tab"
+              data-bs-target="#purchase-order"
+              type="button"
+              role="tab"
+              aria-selected="false"
+            >
+              <i class="bi bi-cart-plus me-2"></i>Purchase Order
+            </button>
+          </li>
+          <li class="mb-1" role="presentation">
+            <button
+              class="nav-link w-100 text-start"
+              data-bs-toggle="tab"
+              data-bs-target="#retur-barang"
+              type="button"
+              role="tab"
+              aria-selected="false"
+            >
+              <i class="bi bi-arrow-return-left me-2"></i>Retur Barang
+            </button>
+          </li>
+        </ul>
+        <hr />
+        <div class="dropdown">
+          <button
+            class="admin-user-button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <div class="admin-user-avatar">
+              <i class="bi bi-person-fill text-white"></i>
+            </div>
+            <strong id="admin-greeting-mobile">Pengguna</strong>
+          </button>
+          <ul class="dropdown-menu text-small shadow">
+            <li>
+              <a class="dropdown-item" href="../../katalog.html">
+                <i class="bi bi-arrow-left-circle me-2"></i>Kembali ke Katalog
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="toast-container position-fixed top-0 end-0 p-3"
+      style="z-index: 9999"
+    ></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="../config.js"></script>
+    <script type="module" src="../utils.js"></script>
+    <script type="module" src="user-panel.js"></script>
+  </body>
+</html>
