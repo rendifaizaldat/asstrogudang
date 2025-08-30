@@ -1174,14 +1174,12 @@
                     Kelola tagihan dan pembayaran dari outlet.
                   </p>
                 </div>
-                <div class="ms-md-4">
-                  <button
-                    class="btn btn-primary"
-                    id="buatTagihanBtn"
-                    data-bs-toggle="modal"
-                    data-bs-target="#dateRangeModal"
-                  >
+                <div class="ms-md-4 d-flex gap-2">
+                  <button class="btn btn-primary" id="buatTagihanBtn" ...>
                     <i class="bi bi-receipt me-1"></i>Buat Tagihan
+                  </button>
+                  <button class="btn btn-success" id="exportPiutangBtn">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
                   </button>
                 </div>
               </div>
@@ -1236,14 +1234,12 @@
                     Kelola tagihan dan pembayaran ke vendor.
                   </p>
                 </div>
-                <div class="ms-md-4">
-                  <button
-                    class="btn btn-primary"
-                    id="buatLaporanVendorBtn"
-                    data-bs-toggle="modal"
-                    data-bs-target="#dateRangeModal"
-                  >
+                <div class="ms-md-4 d-flex gap-2">
+                  <button class="btn btn-primary" id="buatLaporanVendorBtn" ...>
                     <i class="bi bi-file-earmark-text me-1"></i>Buat Laporan
+                  </button>
+                  <button class="btn btn-success" id="exportHutangBtn">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
                   </button>
                 </div>
               </div>
@@ -2032,6 +2028,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script type="module" src="../config.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script type="module" src="../utils.js"></script>
     <script type="module" src="app.js"></script>
     <div
@@ -2432,6 +2429,7 @@
           </div>
           <form id="dateRangeForm">
             <div class="modal-body">
+              <input type="hidden" id="reportAction" value="print" />
               <input type="hidden" id="reportType" />
 
               <div class="mb-3" id="outletFilterContainer">
