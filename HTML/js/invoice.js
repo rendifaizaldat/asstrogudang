@@ -42,43 +42,76 @@ class InvoiceHistoryController {
     if (!invoiceData) {
       UIUtils.createToast(
         "error",
-        "Data invoice untuk diexport tidak ditemukan."
+        "Data invoice untuk diekspor tidak ditemukan."
       );
       return;
     }
 
-    let csvContent = "data:text/csv;charset=utf-8,";
-    // Header
-    csvContent += `INVOICE: ${invoiceData.invoice_id}\r\n`;
-    csvContent += `Tanggal Kirim: ${new Date(
-      invoiceData.tanggal_pengiriman
-    ).toLocaleDateString("id-ID")}\r\n`;
-    csvContent += `Total Tagihan: ${invoiceData.total_tagihan}\r\n`;
-    csvContent += `Status: ${invoiceData.status || "Belum Lunas"}\r\n`;
-    csvContent += "\r\n"; // Baris kosong
+    // 1. Siapkan Data untuk Excel
+    // Header Laporan
+    const reportHeader = [
+      ["INVOICE:", invoiceData.invoice_id],
+      [
+        "Tanggal Kirim:",
+        new Date(invoiceData.tanggal_pengiriman).toLocaleDateString("id-ID"),
+      ],
+      ["Total Tagihan:", invoiceData.total_tagihan],
+      ["Status:", invoiceData.status || "Belum Lunas"],
+    ];
 
-    // Rincian Item Header
-    csvContent += "Nama Produk,Qty,Unit,Harga Satuan,Subtotal\r\n";
+    // Header Tabel Item
+    const itemHeader = [
+      "Nama Produk",
+      "Qty",
+      "Unit",
+      "Harga Satuan",
+      "Subtotal",
+    ];
 
-    // Rincian Item Rows
-    invoiceData.transaction_items.forEach((item) => {
-      const row = [
-        `"${item.products ? item.products.nama : "N/A"}"`,
-        item.quantity,
-        `"${item.products ? item.products.unit : "N/A"}"`,
-        item.price_per_unit,
-        item.subtotal,
-      ].join(",");
-      csvContent += row + "\r\n";
-    });
+    // Baris Data Item
+    const itemRows = invoiceData.transaction_items.map((item) => [
+      item.products ? item.products.nama : "N/A",
+      item.quantity,
+      item.products ? item.products.unit : "N/A",
+      item.price_per_unit,
+      item.subtotal,
+    ]);
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${invoiceData.invoice_id}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // 2. Buat Worksheet menggunakan SheetJS
+    const ws = XLSX.utils.aoa_to_sheet([
+      ...reportHeader,
+      [], // Baris kosong sebagai pemisah
+      itemHeader,
+      ...itemRows,
+    ]);
+
+    // 3. Atur Lebar Kolom (Opsional tapi membuat rapi)
+    ws["!cols"] = [
+      { wch: 40 }, // Lebar kolom A (Nama Produk)
+      { wch: 10 }, // Lebar kolom B (Qty)
+      { wch: 10 }, // Lebar kolom C (Unit)
+      { wch: 20 }, // Lebar kolom D (Harga Satuan)
+      { wch: 20 }, // Lebar kolom E (Subtotal)
+    ];
+
+    // Format sel angka agar menjadi tipe Number di Excel
+    // Mulai dari baris ke-7 (setelah header laporan dan header tabel)
+    for (let i = 0; i < itemRows.length; i++) {
+      const rowIndex = 6 + i; // Index di sheet (dimulai dari 0)
+      // Kolom B (Qty), D (Harga), E (Subtotal)
+      ws[`B${rowIndex + 1}`].t = "n";
+      ws[`D${rowIndex + 1}`].t = "n";
+      ws[`E${rowIndex + 1}`].t = "n";
+    }
+    // Format sel total tagihan
+    ws["B3"].t = "n";
+    ws["B3"].z = '"Rp"#,##0'; // Format mata uang
+
+    // 4. Buat Workbook dan Unduh File
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Rincian Invoice"); // Nama sheet di Excel
+
+    XLSX.writeFile(wb, `${invoiceData.invoice_id}.xlsx`); // Nama file .xlsx
   }
   async init() {
     if (!this.checkAuth()) return;
