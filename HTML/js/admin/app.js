@@ -20,6 +20,7 @@ import { AdminModalManager } from "./barangMasuk.js";
 import { AdminUploadManager } from "./uploadManager.js";
 import { AdminNavigationManager } from "./navigationManager.js";
 import { AutocompleteInput } from "./autocomplete.js";
+import { ExcelUtils } from "./excel-utils.js";
 
 class AdminController {
   constructor() {
@@ -381,36 +382,38 @@ class AdminController {
     document
       .getElementById("closeTemplateBtn")
       ?.addEventListener("click", () => this.hideTemplateEditor());
-    document.getElementById("buatTagihanBtn")?.addEventListener("click", () => {
-      // 1. Set tipe laporan menjadi 'piutang'
-      document.getElementById("reportType").value = "piutang";
 
-      // 2. Tampilkan filter outlet
+    document.getElementById("buatTagihanBtn")?.addEventListener("click", () => {
+      document.getElementById("reportType").value = "piutang";
+      document.getElementById("reportAction").value = "print"; // Set aksi menjadi print
       document
         .getElementById("outletFilterContainer")
         .classList.remove("d-none");
-
-      // 3. Panggil fungsi untuk mengisi dropdown dengan daftar outlet
       this.populateOutletFilterForModal();
+      const modal = new bootstrap.Modal(
+        document.getElementById("dateRangeModal")
+      );
+      modal.show();
     });
 
-    // Listener untuk tombol "Buat Laporan" di tab Hutang
+    // Modifikasi listener yang sudah ada untuk "Buat Laporan Vendor"
     document
       .getElementById("buatLaporanVendorBtn")
       ?.addEventListener("click", () => {
-        // 1. Set tipe laporan menjadi 'hutang'
         document.getElementById("reportType").value = "hutang";
-
-        // 2. Sembunyikan filter outlet karena tidak relevan untuk laporan vendor
+        document.getElementById("reportAction").value = "print"; // Set aksi menjadi print
         document
           .getElementById("outletFilterContainer")
           .classList.add("d-none");
+        const modal = new bootstrap.Modal(
+          document.getElementById("dateRangeModal")
+        );
+        modal.show();
       });
+
     document
       .getElementById("dateRangeForm")
-      ?.addEventListener("submit", (e) =>
-        this.handleGeneratePrintableReport(e)
-      );
+      ?.addEventListener("submit", (e) => this.handleReportGeneration(e));
     document
       .getElementById("saveOutletTemplateBtn")
       ?.addEventListener("click", () => {
@@ -619,6 +622,34 @@ class AdminController {
         }
       });
     }
+    document
+      .getElementById("exportPiutangBtn")
+      ?.addEventListener("click", () => {
+        document.getElementById("reportType").value = "piutang";
+        document.getElementById("reportAction").value = "export"; // Set aksi menjadi export
+        document
+          .getElementById("outletFilterContainer")
+          .classList.remove("d-none");
+        this.populateOutletFilterForModal();
+        const modal = new bootstrap.Modal(
+          document.getElementById("dateRangeModal")
+        );
+        modal.show();
+      });
+
+    document
+      .getElementById("exportHutangBtn")
+      ?.addEventListener("click", () => {
+        document.getElementById("reportType").value = "hutang";
+        document.getElementById("reportAction").value = "export"; // Set aksi menjadi export
+        document
+          .getElementById("outletFilterContainer")
+          .classList.add("d-none");
+        const modal = new bootstrap.Modal(
+          document.getElementById("dateRangeModal")
+        );
+        modal.show();
+      });
   }
 
   handleStateUpdate(event, data) {
@@ -1823,10 +1854,11 @@ class AdminController {
       UIUtils.setLoadingState(saveBtn, false, "Simpan");
     }
   }
-  async handleGeneratePrintableReport(event) {
+  async handleReportGeneration(event) {
     event.preventDefault();
     const form = event.target;
     const reportType = document.getElementById("reportType").value;
+    const reportAction = document.getElementById("reportAction").value; // 'print' atau 'export'
     const startDate = document.getElementById("reportStartDate").value;
     const endDate = document.getElementById("reportEndDate").value;
     const outletSel = document.getElementById("reportOutletSelect");
@@ -1839,7 +1871,7 @@ class AdminController {
     const statusSel = document.getElementById("reportStatusSelect");
     const statusFilter = statusSel ? statusSel.value : "all";
 
-    UIUtils.createToast("info", "Mempersiapkan data laporan untuk dicetak...");
+    UIUtils.createToast("info", `Mempersiapkan data untuk ${reportAction}...`);
     bootstrap.Modal.getInstance(form.closest(".modal")).hide();
 
     try {
@@ -1856,7 +1888,6 @@ class AdminController {
       );
       if (dataError) throw dataError;
 
-      // --- gunakan let agar bisa diubah ---
       let dataForReport =
         reportType === "piutang" ? responseData.piutang : responseData.hutang;
 
@@ -1868,47 +1899,42 @@ class AdminController {
         return;
       }
 
-      // filter status hanya untuk hutang
-      if (statusFilter !== "all") {
-        dataForReport = (dataForReport || []).filter(
-          (item) =>
-            (item.status || "").toLowerCase() === statusFilter.toLowerCase()
-        );
-      }
-
-      if (!dataForReport || dataForReport.length === 0) {
-        UIUtils.createToast(
-          "warning",
-          "Tidak ada data dengan status tersebut."
-        );
-        return;
-      }
-
-      const templateName =
-        reportType === "piutang" ? "outlet_invoice" : "vendor_report";
-
-      const { data: templateData, error: templateError } = await APIClient.post(
-        "manage-reports",
-        {
-          action: "get-template",
-          template_name: templateName,
-        }
-      );
-      if (templateError) throw templateError;
-
       const allProducts = this.state.getData("inventaris");
-      const populatedHtml = PrintUtils.populateTemplate(
-        templateData.template_content,
-        dataForReport,
-        reportType,
-        allProducts,
-        outletName
-      );
-      PrintUtils.printDocument(populatedHtml);
+
+      if (reportAction === "export") {
+        if (reportType === "piutang") {
+          ExcelUtils.exportPiutangToExcel(
+            dataForReport,
+            outletName,
+            allProducts
+          );
+        } else {
+          ExcelUtils.exportHutangToExcel(dataForReport);
+        }
+      } else {
+        // Asumsi default adalah 'print'
+        const templateName =
+          reportType === "piutang" ? "outlet_invoice" : "vendor_report";
+        const { data: templateData, error: templateError } =
+          await APIClient.post("manage-reports", {
+            action: "get-template",
+            template_name: templateName,
+          });
+        if (templateError) throw templateError;
+
+        const populatedHtml = PrintUtils.populateTemplate(
+          templateData.template_content,
+          dataForReport,
+          reportType,
+          allProducts,
+          outletName
+        );
+        PrintUtils.printDocument(populatedHtml);
+      }
     } catch (err) {
       UIUtils.createToast(
         "error",
-        err.message || "Gagal membuat laporan cetak."
+        err.message || `Gagal membuat ${reportAction}.`
       );
     }
   }
