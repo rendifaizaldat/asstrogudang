@@ -111,9 +111,9 @@ class AdminUploadManager {
 
       // Memicu render ulang tabel yang relevan
       if (this.currentUploadData.type === "piutang") {
-        this.renderer.renderPiutangTable();
+        this.renderer.renderPiutangTable(this.state.getData("piutang"));
       } else if (this.currentUploadData.type === "hutang") {
-        this.renderer.renderHutangTable();
+        this.renderer.renderHutangTable(this.state.getData("hutang"));
       }
     } catch (err) {
       // Gunakan renderer untuk menampilkan toast error yang lebih baik
