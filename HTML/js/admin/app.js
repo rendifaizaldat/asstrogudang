@@ -1557,7 +1557,11 @@ class AdminController {
       if (error) throw error;
 
       UIUtils.createToast("success", "Transaksi berhasil diarsipkan.");
-      await this.loadInitialData();
+      if (transactionType === "piutang") {
+        this.loadFilteredPiutang();
+      } else {
+        this.loadFilteredHutang();
+      }
       this.showLoader(false);
     } catch (err) {
       UIUtils.createToast(
@@ -1674,8 +1678,11 @@ class AdminController {
         const modal = bootstrap.Modal.getInstance(modalEl);
         if (modal) modal.hide();
       }
-
-      await this.loadInitialData();
+      if (transactionType === "piutang") {
+        this.loadFilteredPiutang();
+      } else {
+        this.loadFilteredHutang();
+      }
       this.showLoader(false);
     } catch (err) {
       UIUtils.createToast(
@@ -2146,6 +2153,11 @@ class AdminController {
       this.state.updateItemStatus(type, id, newStatus);
       if (newStatus === "Belum Lunas") {
         this.state.updateItemBuktiTransfer(type, id, null);
+      }
+      if (type === "piutang") {
+        this.renderer.renderPiutangTable(this.state.getData("piutang"));
+      } else {
+        this.renderer.renderHutangTable(this.state.getData("hutang"));
       }
 
       UIUtils.createToast(
