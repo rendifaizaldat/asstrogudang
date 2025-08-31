@@ -420,13 +420,13 @@ class AdminState {
   }
 
   updateItemStatus(type, id, status) {
-    const dataKey = type === "piutang" ? "piutang" : "hutang";
-    const items = this.getData(dataKey);
+    const dataKey = type === "piutang" ? "receivables" : "payables"; // <-- PERBAIKAN
+    const items = this.data[dataKey]; // <-- PERBAIKAN
     const index = items.findIndex((item) => item.id == id);
 
     if (index !== -1) {
       items[index].status = status;
-      this.setData(dataKey, items);
+      this.setData(dataKey, items); // Sekarang key yang dikirim sudah benar
       this.analytics.recordActivity("status_updated", { type, id, status });
       return true;
     }
@@ -434,13 +434,13 @@ class AdminState {
   }
 
   updateItemBuktiTransfer(type, id, url) {
-    const dataKey = type === "piutang" ? "piutang" : "hutang";
-    const items = this.getData(dataKey);
+    const dataKey = type === "piutang" ? "receivables" : "payables"; // <-- PERBAIKAN
+    const items = this.data[dataKey]; // <-- PERBAIKAN
     const index = items.findIndex((item) => item.id == id);
 
     if (index !== -1) {
       items[index].bukti_transfer = url;
-      this.setData(dataKey, items);
+      this.setData(dataKey, items); // Sekarang key yang dikirim sudah benar
       this.analytics.recordActivity("file_uploaded", { type, id });
       return true;
     }
