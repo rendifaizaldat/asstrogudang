@@ -1,4 +1,4 @@
-const CACHE_NAME = "gudang-bandung-raya-cache-v2.6";
+const CACHE_NAME = "gudang-bandung-raya-cache-v3.0";
 const STATIC_CACHE_URLS = [
   // Core App Shell
   "index.html",
@@ -166,5 +166,6 @@ async function syncOfflineRequests() {
     console.error("[Service Worker] Sync failed:", error.message);
   }
 }
+
 
 
