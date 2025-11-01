@@ -17,9 +17,10 @@ class AdminUploadManager {
    * @param {AdminState} state - Instance dari state manager aplikasi.
    * @param {AdminRenderer} renderer - Instance dari renderer aplikasi untuk menampilkan notifikasi.
    */
-  constructor(state, renderer) {
+  constructor(state, renderer, controller) {
     this.state = state;
     this.renderer = renderer; // Renderer diperlukan untuk menampilkan toast error yang lebih informatif
+    this.controller = controller; // Simpan referensi ke AdminController
     this.currentUploadData = null; // Menyimpan data (id, type) dari item yang akan diunggah
     this.setupUploadModal();
   }
@@ -111,9 +112,9 @@ class AdminUploadManager {
 
       // Memicu render ulang tabel yang relevan
       if (this.currentUploadData.type === "piutang") {
-        this.renderer.renderPiutangTable(this.state.getData("piutang"));
+        this.controller.debouncedLoadFilteredPiutang();
       } else if (this.currentUploadData.type === "hutang") {
-        this.renderer.renderHutangTable(this.state.getData("hutang"));
+        this.controller.debouncedLoadFilteredHutang();
       }
     } catch (err) {
       // Gunakan renderer untuk menampilkan toast error yang lebih baik
@@ -129,3 +130,4 @@ class AdminUploadManager {
 
 // Ekspor kelas agar bisa diimpor di file lain (app.js)
 export { AdminUploadManager };
+
