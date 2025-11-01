@@ -28,7 +28,7 @@ class AdminController {
     this.state = new AdminState();
     this.renderer = new AdminRenderer(this.state);
     this.modalManager = new AdminModalManager(this.state);
-    this.uploadManager = new AdminUploadManager(this.state, this.renderer);
+    this.uploadManager = new AdminUploadManager(this.state, this.renderer, this);
     this.navigationManager = new AdminNavigationManager();
     this.elements = {};
     this.barangAutocomplete = null;
@@ -43,6 +43,16 @@ class AdminController {
     };
     this.returBarangAutocomplete = null;
     this.editTransactionAutocomplete = null;
+    this.activePiutangFilter = {};
+    this.activeHutangFilter = {};
+    this.debouncedLoadFilteredPiutang = UIUtils.debounce(
+      () => this.loadFilteredPiutang(true),
+      300
+    );
+    this.debouncedLoadFilteredHutang = UIUtils.debounce(
+      () => this.loadFilteredHutang(true),
+      300
+    );
   }
 
   async init() {
@@ -2155,9 +2165,9 @@ class AdminController {
         this.state.updateItemBuktiTransfer(type, id, null);
       }
       if (type === "piutang") {
-        this.renderer.renderPiutangTable(this.state.getData("piutang"));
+        this.debouncedLoadFilteredPiutang();
       } else {
-        this.renderer.renderHutangTable(this.state.getData("hutang"));
+        this.debouncedLoadFilteredHutang();
       }
 
       UIUtils.createToast(
@@ -2530,12 +2540,19 @@ class AdminController {
     yearSelect.value = currentYear;
   }
 
-  async loadFilteredPiutang() {
-    const outlet = document.getElementById("piutang-outlet-filter").value;
-    const month = document.getElementById("piutang-month-filter").value;
-    const year = document.getElementById("piutang-year-filter").value;
+  async loadFilteredPiutang(useStoredFilter = false) {
+    let outlet, month, year;
 
-    this.renderer.renderPiutangTable([], true); // Tampilkan loader
+    if (useStoredFilter) {
+      ({ outlet, month, year } = this.activePiutangFilter);
+    } else {
+      outlet = document.getElementById("piutang-outlet-filter").value;
+      month = document.getElementById("piutang-month-filter").value;
+      year = document.getElementById("piutang-year-filter").value;
+      this.activePiutangFilter = { outlet, month, year };
+    }
+
+    this.renderer.renderPiutangTable([], true);
     try {
       const { data, error } = await APIClient.get("manage-transactions", {
         type: "piutang",
@@ -2551,10 +2568,17 @@ class AdminController {
     }
   }
 
-  async loadFilteredHutang() {
-    const month = document.getElementById("hutang-month-filter").value;
-    const year = document.getElementById("hutang-year-filter").value;
+  async loadFilteredHutang(useStoredFilter = false) {
+    let month, year;
 
+    if (useStoredFilter) {
+      ({ month, year } = this.activeHutangFilter);
+    } else {
+      month = document.getElementById("hutang-month-filter").value;
+      year = document.getElementById("hutang-year-filter").value;
+      // Simpan filter terbaru
+      this.activeHutangFilter = { month, year };
+    }
     this.renderer.renderHutangTable([], true); // Tampilkan loader
     try {
       const { data, error } = await APIClient.get("manage-transactions", {
@@ -2840,3 +2864,4 @@ document.addEventListener("DOMContentLoaded", () => {
     window.adminApp = app;
   }, 100);
 });
+
