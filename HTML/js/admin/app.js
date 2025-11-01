@@ -1767,16 +1767,41 @@ class AdminController {
     const submitBtn = document.getElementById("updateProductBtn");
     UIUtils.setLoadingState(submitBtn, true, "Memperbarui...");
 
-    const payload = {
-      productId: parseInt(document.getElementById("editProductId").value, 10),
-      updates: {
-        nama: document.getElementById("editNamaProduk").value,
-        unit: document.getElementById("editUnit").value,
-        harga_beli: parseFloat(document.getElementById("editHargaBeli").value),
-        foto: document.getElementById("editFotoUrl").value,
-      },
+    const productId = parseInt(document.getElementById("editProductId").value, 10);
+    const oldProduct = this.state.getData("inventaris").find((p) => p.id === productId);
+    if (!oldProduct) {
+      UIUtils.createToast(
+        "error",
+        "Produk lama tidak ditemukan di state. Pembatalan update."
+      );
+      UIUtils.setLoadingState(submitBtn, false, "Simpan Perubahan");
+      return;
+    }
+    const oldProductClone = structuredClone(oldProduct);
+    const newNama = document.getElementById("editNamaProduk").value;
+    const newUnit = document.getElementById("editUnit").value;
+    const newHargaBeli = parseFloat(
+      document.getElementById("editHargaBeli").value
+    );
+    const newFoto = document.getElementById("editFotoUrl").value;
+    const updatesPayload = {
+      nama: newNama,
+      unit: newUnit,
+      harga_beli: newHargaBeli,
+      foto: newFoto,
     };
-
+    if (parseFloat(oldProductClone.harga_beli) === newHargaBeli) {
+      updatesPayload.harga_jual = parseFloat(oldProductClone.harga_jual);
+    } else {
+    }
+    console.info("[UpdateProduct Payload]", {
+      productId: productId,
+      updates: updatesPayload,
+    });
+    const payload = {
+      productId: productId,
+      updates: updatesPayload,
+    };
     try {
       const { error } = await APIClient.put("manage-products", payload);
       if (error) throw error;
@@ -1786,8 +1811,8 @@ class AdminController {
         `Produk "${payload.updates.nama}" berhasil diperbarui.`
       );
       bootstrap.Modal.getInstance(form.closest(".modal")).hide();
-      await this.loadInitialData();
-      this.showLoader(false); // Muat ulang data untuk menampilkan perubahan
+      await this.loadInitialData(); // Muat ulang semua data
+      this.showLoader(false); // Pastikan loader disembunyikan
     } catch (err) {
       UIUtils.createToast("error", err.message);
     } finally {
@@ -2864,4 +2889,5 @@ document.addEventListener("DOMContentLoaded", () => {
     window.adminApp = app;
   }, 100);
 });
+
 
